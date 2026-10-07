@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Startpage</title>
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --bg: #1a1a2e;
+            --surface: rgba(30, 30, 50, 0.85);
+            --surface-hover: rgba(45, 45, 70, 0.95);
+            --text: #e0e0e0;
+            --text-muted: #888;
+            --accent: #7c8cf8;
+            --accent-hover: #9aa8ff;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius: 12px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Microsoft YaHei', 'PingFang TC', 'PingFang SC', sans-serif;
+        }
+
+        /* ===== Reset ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse at 20% 50%, var(--glow1, rgba(124, 140, 248, 0.08)) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, var(--glow2, rgba(180, 100, 255, 0.06)) 0%, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+            transition: background-color 0.25s, color 0.25s;
+        }
+
+        body[data-light="1"] {
+            background-image:
+                radial-gradient(ellipse at 20% 50%, var(--glow1, rgba(124, 140, 248, 0.15)) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, var(--glow2, rgba(180, 100, 255, 0.10)) 0%, transparent 50%);
+        }
+
+        /* ===== Top Bar ===== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            gap: 16px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--topbar-bg, rgba(26, 26, 46, 0.9));
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.25s;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .logo {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+            letter-spacing: -0.5px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0 12px;
+            flex: 1;
+            max-width: 560px;
+            transition: border-color 0.2s;
+        }
+
+        .search-box:focus-within { border-color: var(--accent); }
+
+        .search-box input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 0.9rem;
+            padding: 10px 8px;
+            width: 100%;
+            font-family: var(--font);
+        }
+
+        .search-box input::placeholder { color: var(--text-muted); }
+
+        .search-box select {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 4px;
+            font-family: var(--font);
+            max-width: 130px;
+        }
+
+        .search-box select option,
+        .search-box select optgroup {
+            background: var(--bg);
+            color: var(--text);
+            font-style: normal;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .clock {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-family: var(--font);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+            color: #fff;
+        }
+
+        .btn-icon { padding: 8px 10px; font-size: 1rem; line-height: 1; }
+
+        .btn-danger { border-color: rgba(255, 80, 80, 0.3); color: #ff6b6b; }
+        .btn-danger:hover {
+            background: rgba(255, 80, 80, 0.15);
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        /* ===== Page Tabs ===== */
+        .page-tabs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 24px;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            border-bottom: 1px solid var(--border);
+            background: var(--tabs-bg, rgba(26, 26, 46, 0.6));
+        }
+
+        .page-tabs::-webkit-scrollbar { height: 4px; }
+        .page-tabs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .page-tab {
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.82rem;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-family: var(--font);
+            user-select: none;
+        }
+
+        .page-tab:hover { background: var(--surface-hover); color: var(--text); }
+        .page-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .page-tab .tab-close { margin-left: 8px; opacity: 0.6; font-size: 0.9rem; }
+        .page-tab .tab-close:hover { opacity: 1; }
+
+        .page-tab-add {
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: transparent;
+            border: 1px dashed var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.82rem;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-family: var(--font);
+        }
+
+        .page-tab-add:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ===== Main Content ===== */
+        .content {
+            padding: 20px 24px 60px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* ===== Masonry 容器 ===== */
+        .widgets-grid {
+            position: relative;
+            width: 100%;
+        }
+
+        /* ===== Widget Card ===== */
+        .widget {
+            --w-color: var(--accent);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: border-color 0.2s, background-color 0.25s;
+            will-change: left, top;
+        }
+
+        .widget:hover { border-color: var(--accent); }
+
+        .widget[data-has-color="1"]::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--w-color), transparent 92%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .widget[data-has-color="1"] .widget-title { color: var(--w-color); }
+
+        .widget[data-has-color="1"] .add-link-btn:hover {
+            border-color: var(--w-color);
+            color: var(--w-color);
+            background: color-mix(in srgb, var(--w-color) 8%, transparent);
+        }
+
+        .widget-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px 10px;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .widget-header:active { cursor: grabbing; }
+
+        .widget-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: 0.3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .widget-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            flex-shrink: 0;
+        }
+
+        .widget:hover .widget-actions { opacity: 1; }
+
+        .widget-action {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            transition: all 0.15s;
+            font-family: var(--font);
+        }
+
+        .widget-action:hover { background: var(--surface-hover); color: var(--text); }
+        .widget-action.delete:hover { color: #ff6b6b; }
+
+        .widget-body { padding: 0 16px 16px; }
+
+        /* ===== Link List (LIST view — default) ===== */
+        .link-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .link-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 10px;
+            border-radius: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.15s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .link-item:hover { background: var(--surface-hover); color: var(--text); }
+
+        .link-item .link-favicon {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            flex-shrink: 0;
+            object-fit: contain;
+        }
+
+        .link-item .link-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .link-item .link-edit-actions { display: none; gap: 2px; }
+        .link-item:hover .link-edit-actions { display: flex; }
+
+        .link-item .link-edit-actions button {
+            background: var(--surface-hover);
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            transition: all 0.15s;
+            font-family: var(--font);
+        }
+
+        .link-item .link-edit-actions button:hover { color: var(--text); }
+        .link-item .link-edit-actions button.del:hover { color: #ff6b6b; }
+
+        /* ===== Link Grid (ICON view — per-widget) =====
+           只作用于「该」widget：data-view="icons" 的卡片
+           其它卡片照常显示列表 */
+        .widget[data-view="icons"] .link-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+            gap: 6px;
+        }
+
+        .widget[data-view="icons"] .link-item {
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 6px 12px;
+            text-align: center;
+            min-height: 92px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: transparent;
+        }
+
+        .widget[data-view="icons"] .link-item:hover {
+            border-color: var(--border);
+            background: var(--surface-hover);
+        }
+
+        .widget[data-view="icons"] .link-item .link-favicon {
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
+        }
+
+        .widget[data-view="icons"] .link-item .link-label {
+            flex: none;
+            width: 100%;
+            font-size: 0.72rem;
+            text-align: center;
+            line-height: 1.25;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .widget[data-view="icons"] .link-item .link-edit-actions {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            display: none;
+            gap: 2px;
+        }
+
+        .widget[data-view="icons"] .link-item:hover .link-edit-actions { display: flex; }
+
+        .widget[data-view="icons"] .link-item .link-edit-actions button {
+            padding: 1px 4px;
+            font-size: 0.62rem;
+            background: var(--bg);
+            opacity: 0.9;
+        }
+
+        .widget[data-view="icons"] .add-link-btn {
+            grid-column: 1 / -1;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        /* ===== Add Link Button ===== */
+        .add-link-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: 1px dashed var(--border);
+            background: none;
+            transition: all 0.15s;
+            margin-top: 4px;
+            font-family: var(--font);
+            width: 100%;
+            text-align: left;
+        }
+
+        .add-link-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 8%, transparent);
+        }
+
+        /* ===== Add Widget Card ===== */
+        .add-widget-card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 110px;
+            background: transparent;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            font-family: var(--font);
+            will-change: left, top;
+        }
+
+        .add-widget-card:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 6%, transparent);
+        }
+
+        /* ===== Colour Popover ===== */
+        .color-pop {
+            position: fixed;
+            z-index: 3000;
+            width: 216px;
+            background: var(--pop-bg, #22223a);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+            animation: modalIn 0.15s ease;
+        }
+
+        .color-pop-title {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .color-pop-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .swatch {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            background: var(--sw);
+            transition: transform 0.12s, border-color 0.12s;
+            padding: 0;
+        }
+
+        .swatch:hover { transform: scale(1.12); }
+        .swatch.active { border-color: var(--text); }
+
+        .color-pop-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+        }
+
+        .swatch-custom {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .swatch-custom input[type=color] {
+            width: 22px;
+            height: 22px;
+            border: none;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        .swatch-reset {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font);
+        }
+
+        .swatch-reset:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ===== Modal ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: var(--modal-bg, #1e1e32);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalIn 0.2s ease;
+            color: var(--text);
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal h3 { font-size: 1.1rem; margin-bottom: 20px; color: var(--text); }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.88rem;
+            font-family: var(--font);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus { border-color: var(--accent); }
+
+        .form-group select option { background: var(--bg); color: var(--text); }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--pop-bg, #2a2a45);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            z-index: 4000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ===== Drag & Drop ===== */
+        .widget.dragging { opacity: 0.5; }
+        .widget.drag-over { border-color: var(--accent); border-style: dashed; }
+
+        /* ===== Settings Panel ===== */
+        .settings-panel {
+            display: none;
+            padding: 20px 24px;
+            background: var(--panel-bg, rgba(30, 30, 50, 0.95));
+            border-bottom: 1px solid var(--border);
+        }
+
+        .settings-panel.open { display: block; }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .settings-row:last-child { margin-bottom: 0; }
+
+        .settings-row label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            min-width: 78px;
+        }
+
+        .settings-row input[type="color"] {
+            width: 40px;
+            height: 30px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: none;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .settings-row input[type="text"],
+        .settings-row select {
+            padding: 6px 10px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.82rem;
+            font-family: var(--font);
+            outline: none;
+            min-width: 150px;
+        }
+
+        .settings-row input[type="text"]:focus,
+        .settings-row select:focus { border-color: var(--accent); }
+
+        .settings-row select option { background: var(--bg); color: var(--text); }
+
+        .settings-divider {
+            flex-basis: 100%;
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0 10px;
+        }
+
+        .settings-section-title {
+            flex-basis: 100%;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            opacity: 0.75;
+            margin-bottom: 4px;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 600px) {
+            .topbar { padding: 12px 16px; }
+            .content { padding: 16px 16px 60px; }
+            .page-tabs { padding: 10px 16px; }
+            .clock { display: none; }
+            .search-box { max-width: none; }
+            .logo { display: none; }
+        }
+
+        /* ===== Print ===== */
+        @media print {
+            .topbar, .page-tabs, .widget-actions, .add-widget-card, .add-link-btn, .settings-panel {
+                display: none !important;
+            }
+            body { background: #fff; color: #000; background-image: none; }
+            .widgets-grid { height: auto !important; }
+            .widget, .add-widget-card {
+                position: static !important;
+                width: 100% !important;
+                left: auto !important;
+                top: auto !important;
+                margin-bottom: 12px;
+            }
+            .widget {
+                background: #fff;
+                border: 1px solid #ddd;
+                box-shadow: none;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== Top Bar ===== -->
+<div class="topbar">
+    <div class="topbar-left">
+        <div class="logo">⬡ Startpage</div>
+        <div class="search-box">
+            <span style="color: var(--text-muted); font-size: 0.9rem;">🔍</span>
+            <input type="text" id="searchInput" data-i18n-placeholder="search.placeholder" autocomplete="off">
+            <select id="searchEngine">
+                <optgroup label="Search" data-i18n-label="search.groupSearch">
+                    <option value="https://www.google.com/search?q=">Google</option>
+                    <option value="https://duckduckgo.com/?q=">DuckDuckGo</option>
+                    <option value="https://www.bing.com/search?q=">Bing</option>
+                    <option value="https://search.brave.com/search?q=">Brave</option>
+                    <option value="https://www.youtube.com/results?search_query=">YouTube</option>
+                    <option value="https://github.com/search?q=">GitHub</option>
+                </optgroup>
+                <optgroup label="AI" data-i18n-label="search.groupAI">
+                    <option value="https://chat.deepseek.com/?q=">DeepSeek</option>
+                    <option value="https://gemini.google.com/app?q=">Gemini</option>
+                    <option value="https://chat.qwen.ai/?q=">Qwen</option>
+                    <option value="https://chatgpt.com/?q=">ChatGPT</option>
+                    <option value="https://www.perplexity.ai/search?q=">Perplexity</option>
+                    <option value="https://kimi.moonshot.cn/?q=">Kimi</option>
+                    <option value="https://grok.com/?q=">Grok</option>
+                </optgroup>
+            </select>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <span class="clock" id="clock"></span>
+        <button class="btn btn-icon" id="settingsBtn" title="Settings">⚙️</button>
+        <button class="btn btn-primary" id="addWidgetBtn" data-i18n="toolbar.addWidget">+ Widget</button>
+    </div>
+</div>
+
+<!-- ===== Settings Panel ===== -->
+<div class="settings-panel" id="settingsPanel">
+    <div class="settings-row">
+        <div class="settings-section-title" data-i18n="settings.appearance">Appearance</div>
+        <label data-i18n="settings.theme">Theme</label>
+        <select id="themeSelect">
+            <option value="dark" data-i18n="theme.dark">Dark</option>
+            <option value="light" data-i18n="theme.light">Light</option>
+            <option value="ocean" data-i18n="theme.ocean">Ocean</option>
+            <option value="forest" data-i18n="theme.forest">Forest</option>
+            <option value="rose" data-i18n="theme.rose">Rose</option>
+            <option value="sunset" data-i18n="theme.sunset">Sunset</option>
+        </select>
+        <label data-i18n="settings.language">Language</label>
+        <select id="langSelect">
+            <option value="en">English</option>
+            <option value="zh-TW">繁體中文</option>
+            <option value="zh-CN">简体中文</option>
+        </select>
+        <label data-i18n="settings.defaultView">New widget default</label>
+        <select id="defaultViewSelect">
+            <option value="list" data-i18n="view.list">List</option>
+            <option value="icons" data-i18n="view.icons">Icons</option>
+        </select>
+    </div>
+    <div class="settings-row">
+        <label data-i18n="settings.accentColor">Accent</label>
+        <input type="color" id="accentColorPicker" value="#7c8cf8">
+        <label data-i18n="settings.background">Background</label>
+        <input type="color" id="bgColorPicker" value="#1a1a2e">
+        <label data-i18n="settings.pageTitle">Page title</label>
+        <input type="text" id="pageTitleInput" placeholder="My Startpage">
+    </div>
+    <div class="settings-row">
+        <div class="settings-divider"></div>
+        <button class="btn" id="exportBtn" data-i18n="settings.export">📤 Export data</button>
+        <button class="btn" id="importBtn" data-i18n="settings.import">📥 Import data</button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none">
+        <button class="btn btn-danger" id="clearAllBtn" data-i18n="settings.clearAll">🗑 Clear all data</button>
+    </div>
+</div>
+
+<!-- ===== Page Tabs ===== -->
+<div class="page-tabs" id="pageTabs"></div>
+
+<!-- ===== Main Content ===== -->
+<div class="content">
+    <div class="widgets-grid" id="widgetsGrid"></div>
+</div>
+
+<!-- ===== Modal ===== -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   START PAGE — single file, offline
+   Masonry + per-widget colour + per-widget view (list/icons)
+   + themes + i18n (en / zh-TW / zh-CN)
+   ============================================================ */
+
+/* ============================================================
+   1. THEMES
+   ============================================================ */
+const THEMES = {
+    dark: {
+        vars: {
+            '--bg': '#1a1a2e',
+            '--surface': 'rgba(30, 30, 50, 0.85)',
+            '--surface-hover': 'rgba(45, 45, 70, 0.95)',
+            '--text': '#e0e0e0',
+            '--text-muted': '#888',
+            '--border': 'rgba(255, 255, 255, 0.08)',
+            '--accent': '#7c8cf8',
+            '--glow1': 'rgba(124, 140, 248, 0.08)',
+            '--glow2': 'rgba(180, 100, 255, 0.06)',
+            '--topbar-bg': 'rgba(26, 26, 46, 0.9)',
+            '--tabs-bg': 'rgba(26, 26, 46, 0.6)',
+            '--panel-bg': 'rgba(30, 30, 50, 0.95)',
+            '--modal-bg': '#1e1e32',
+            '--pop-bg': '#2a2a45',
+        },
+        light: false
+    },
+    light: {
+        vars: {
+            '--bg': '#f2f3f7',
+            '--surface': 'rgba(255, 255, 255, 0.85)',
+            '--surface-hover': 'rgba(255, 255, 255, 1)',
+            '--text': '#1a1a2e',
+            '--text-muted': '#5b5b70',
+            '--border': 'rgba(0, 0, 0, 0.09)',
+            '--accent': '#5b6ef5',
+            '--glow1': 'rgba(91, 110, 245, 0.14)',
+            '--glow2': 'rgba(168, 85, 247, 0.10)',
+            '--topbar-bg': 'rgba(255, 255, 255, 0.85)',
+            '--tabs-bg': 'rgba(255, 255, 255, 0.6)',
+            '--panel-bg': 'rgba(255, 255, 255, 0.97)',
+            '--modal-bg': '#ffffff',
+            '--pop-bg': '#ffffff',
+        },
+        light: true
+    },
+    ocean: {
+        vars: {
+            '--bg': '#071c2b',
+            '--surface': 'rgba(14, 45, 70, 0.75)',
+            '--surface-hover': 'rgba(22, 60, 92, 0.95)',
+            '--text': '#dbeafe',
+            '--text-muted': '#7fb3d5',
+            '--border': 'rgba(125, 211, 252, 0.12)',
+            '--accent': '#38bdf8',
+            '--glow1': 'rgba(56, 189, 248, 0.12)',
+            '--glow2': 'rgba(14, 165, 233, 0.08)',
+            '--topbar-bg': 'rgba(7, 28, 43, 0.9)',
+            '--tabs-bg': 'rgba(7, 28, 43, 0.6)',
+            '--panel-bg': 'rgba(14, 45, 70, 0.96)',
+            '--modal-bg': '#0c2638',
+            '--pop-bg': '#0e3049',
+        },
+        light: false
+    },
+    forest: {
+        vars: {
+            '--bg': '#0b1e15',
+            '--surface': 'rgba(17, 44, 32, 0.78)',
+            '--surface-hover': 'rgba(25, 60, 44, 0.95)',
+            '--text': '#d1fae5',
+            '--text-muted': '#7fc9a8',
+            '--border': 'rgba(110, 231, 183, 0.12)',
+            '--accent': '#34d399',
+            '--glow1': 'rgba(52, 211, 153, 0.12)',
+            '--glow2': 'rgba(16, 185, 129, 0.08)',
+            '--topbar-bg': 'rgba(11, 30, 21, 0.9)',
+            '--tabs-bg': 'rgba(11, 30, 21, 0.6)',
+            '--panel-bg': 'rgba(17, 44, 32, 0.96)',
+            '--modal-bg': '#0f2a1e',
+            '--pop-bg': '#123326',
+        },
+        light: false
+    },
+    rose: {
+        vars: {
+            '--bg': '#1c0e1c',
+            '--surface': 'rgba(48, 22, 48, 0.78)',
+            '--surface-hover': 'rgba(68, 30, 68, 0.95)',
+            '--text': '#fce7f3',
+            '--text-muted': '#d99ec5',
+            '--border': 'rgba(249, 168, 212, 0.12)',
+            '--accent': '#f472b6',
+            '--glow1': 'rgba(244, 114, 182, 0.12)',
+            '--glow2': 'rgba(217, 70, 239, 0.08)',
+            '--topbar-bg': 'rgba(28, 14, 28, 0.9)',
+            '--tabs-bg': 'rgba(28, 14, 28, 0.6)',
+            '--panel-bg': 'rgba(48, 22, 48, 0.96)',
+            '--modal-bg': '#281528',
+            '--pop-bg': '#321b32',
+        },
+        light: false
+    },
+    sunset: {
+        vars: {
+            '--bg': '#1c0f08',
+            '--surface': 'rgba(56, 28, 12, 0.75)',
+            '--surface-hover': 'rgba(80, 40, 18, 0.95)',
+            '--text': '#fed7aa',
+            '--text-muted': '#d99b6a',
+            '--border': 'rgba(251, 146, 60, 0.14)',
+            '--accent': '#fb923c',
+            '--glow1': 'rgba(251, 146, 60, 0.13)',
+            '--glow2': 'rgba(239, 68, 68, 0.08)',
+            '--topbar-bg': 'rgba(28, 15, 8, 0.9)',
+            '--tabs-bg': 'rgba(28, 15, 8, 0.6)',
+            '--panel-bg': 'rgba(56, 28, 12, 0.96)',
+            '--modal-bg': '#2a160b',
+            '--pop-bg': '#361c0e',
+        },
+        light: false
+    }
+};
+
+/* ============================================================
+   2. I18N
+   ============================================================ */
+const I18N = {
+    en: {
+        'search.placeholder': 'Search the web or ask an AI…  (Ctrl+K)',
+        'search.groupSearch': 'Search',
+        'search.groupAI': 'AI',
+        'search.aiOpened': '🤖 Opened {name} · query copied to clipboard',
+        'search.aiOpenedSimple': '🤖 Opened {name}',
+        'toolbar.addWidget': '+ Widget',
+        'view.list': 'List',
+        'view.icons': 'Icons',
+        'view.toList': 'Switch to list view',
+        'view.toIcons': 'Switch to icon view',
+        'settings.appearance': 'Appearance',
+        'settings.theme': 'Theme',
+        'settings.language': 'Language',
+        'settings.defaultView': 'New widget default',
+        'settings.accentColor': 'Accent',
+        'settings.background': 'Background',
+        'settings.pageTitle': 'Page title',
+        'settings.export': '📤 Export data',
+        'settings.import': '📥 Import data',
+        'settings.clearAll': '🗑 Clear all data',
+        'settings.exported': '📤 Exported',
+        'settings.imported': '📥 Imported successfully',
+        'settings.invalidFile': '⚠️ Invalid data file',
+        'settings.parseError': '⚠️ Could not parse file',
+        'settings.resetDone': '🗑 Reset to defaults',
+        'settings.confirmReset': 'Clear ALL data and reset to defaults? This cannot be undone.',
+        'theme.dark': 'Dark',
+        'theme.light': 'Light',
+        'theme.ocean': 'Ocean',
+        'theme.forest': 'Forest',
+        'theme.rose': 'Rose',
+        'theme.sunset': 'Sunset',
+        'page.addPage': '+ Add page',
+        'page.pageName': 'Page name:',
+        'page.newPage': 'New Page',
+        'page.rename': 'Rename page:',
+        'page.deleteConfirm': 'Delete page "{name}" and all its widgets?',
+        'page.cannotDelete': '⚠️ Cannot delete the last page',
+        'page.added': '✅ Page added',
+        'page.renamed': '✅ Page renamed',
+        'page.deleted': '🗑 Page deleted',
+        'widget.addWidget': 'Widget title:',
+        'widget.newWidget': 'New Widget',
+        'widget.rename': 'Rename widget:',
+        'widget.deleteConfirm': 'Delete widget "{name}"?',
+        'widget.added': '✅ Widget added',
+        'widget.renamed': '✅ Widget renamed',
+        'widget.deleted': '🗑 Widget deleted',
+        'widget.colourUpdated': '🎨 Widget colour updated',
+        'widget.colourTitle': 'Widget colour',
+        'widget.customColour': 'Custom…',
+        'widget.resetColour': 'Reset',
+        'widget.viewSwitched': '👁 Switched to {view} view',
+        'link.addLink': '+ Add link',
+        'link.addTitle': 'Add Link',
+        'link.editTitle': 'Edit Link',
+        'link.label': 'Label',
+        'link.labelPlaceholder': 'e.g. Google',
+        'link.url': 'URL',
+        'link.save': 'Save',
+        'link.cancel': 'Cancel',
+        'link.required': '⚠️ Label and URL are required',
+        'link.added': '✅ Link added',
+        'link.updated': '✅ Link updated',
+        'link.deleted': '🗑 Link deleted',
+        'link.deleteConfirm': 'Delete link "{name}"?',
+        'common.addWidget': '+ Add widget',
+        'common.toastSaveFailed': '⚠️ Could not save — storage may be full or blocked.'
+    },
+    'zh-TW': {
+        'search.placeholder': '搜尋網頁或詢問 AI…  (Ctrl+K)',
+        'search.groupSearch': '搜尋',
+        'search.groupAI': 'AI',
+        'search.aiOpened': '🤖 已開啟 {name} · 搜尋詞已複製到剪貼簿',
+        'search.aiOpenedSimple': '🤖 已開啟 {name}',
+        'toolbar.addWidget': '+ 小工具',
+        'view.list': '清單',
+        'view.icons': '圖示',
+        'view.toList': '切換為清單檢視',
+        'view.toIcons': '切換為圖示檢視',
+        'settings.appearance': '外觀',
+        'settings.theme': '主題',
+        'settings.language': '語言',
+        'settings.defaultView': '新小工具預設',
+        'settings.accentColor': '強調色',
+        'settings.background': '背景色',
+        'settings.pageTitle': '頁面標題',
+        'settings.export': '📤 匯出資料',
+        'settings.import': '📥 匯入資料',
+        'settings.clearAll': '🗑 清除全部資料',
+        'settings.exported': '📤 已匯出',
+        'settings.imported': '📥 匯入成功',
+        'settings.invalidFile': '⚠️ 資料檔案格式錯誤',
+        'settings.parseError': '⚠️ 無法解析檔案',
+        'settings.resetDone': '🗑 已還原為預設值',
+        'settings.confirmReset': '確定要清除所有資料並還原預設值嗎？此動作無法復原。',
+        'theme.dark': '深色',
+        'theme.light': '淺色',
+        'theme.ocean': '海洋',
+        'theme.forest': '森林',
+        'theme.rose': '玫瑰',
+        'theme.sunset': '日落',
+        'page.addPage': '+ 新增頁面',
+        'page.pageName': '頁面名稱：',
+        'page.newPage': '新頁面',
+        'page.rename': '重新命名頁面：',
+        'page.deleteConfirm': '確定刪除頁面「{name}」及其所有小工具嗎？',
+        'page.cannotDelete': '⚠️ 無法刪除最後一個頁面',
+        'page.added': '✅ 已新增頁面',
+        'page.renamed': '✅ 已重新命名頁面',
+        'page.deleted': '🗑 已刪除頁面',
+        'widget.addWidget': '小工具標題：',
+        'widget.newWidget': '新小工具',
+        'widget.rename': '重新命名小工具：',
+        'widget.deleteConfirm': '確定刪除小工具「{name}」嗎？',
+        'widget.added': '✅ 已新增小工具',
+        'widget.renamed': '✅ 已重新命名小工具',
+        'widget.deleted': '🗑 已刪除小工具',
+        'widget.colourUpdated': '🎨 已更新小工具顏色',
+        'widget.colourTitle': '小工具顏色',
+        'widget.customColour': '自訂…',
+        'widget.resetColour': '重設',
+        'widget.viewSwitched': '👁 已切換為{view}檢視',
+        'link.addLink': '+ 新增連結',
+        'link.addTitle': '新增連結',
+        'link.editTitle': '編輯連結',
+        'link.label': '名稱',
+        'link.labelPlaceholder': '例如 Google',
+        'link.url': '網址',
+        'link.save': '儲存',
+        'link.cancel': '取消',
+        'link.required': '⚠️ 名稱與網址為必填',
+        'link.added': '✅ 已新增連結',
+        'link.updated': '✅ 已更新連結',
+        'link.deleted': '🗑 已刪除連結',
+        'link.deleteConfirm': '確定刪除連結「{name}」嗎？',
+        'common.addWidget': '+ 新增小工具',
+        'common.toastSaveFailed': '⚠️ 無法儲存 — 儲存空間可能已滿或被封鎖。'
+    },
+    'zh-CN': {
+        'search.placeholder': '搜索网页或询问 AI…  (Ctrl+K)',
+        'search.groupSearch': '搜索',
+        'search.groupAI': 'AI',
+        'search.aiOpened': '🤖 已打开 {name} · 搜索词已复制到剪贴板',
+        'search.aiOpenedSimple': '🤖 已打开 {name}',
+        'toolbar.addWidget': '+ 小组件',
+        'view.list': '列表',
+        'view.icons': '图标',
+        'view.toList': '切换为列表视图',
+        'view.toIcons': '切换为图标视图',
+        'settings.appearance': '外观',
+        'settings.theme': '主题',
+        'settings.language': '语言',
+        'settings.defaultView': '新小组件默认',
+        'settings.accentColor': '强调色',
+        'settings.background': '背景色',
+        'settings.pageTitle': '页面标题',
+        'settings.export': '📤 导出数据',
+        'settings.import': '📥 导入数据',
+        'settings.clearAll': '🗑 清除全部数据',
+        'settings.exported': '📤 已导出',
+        'settings.imported': '📥 导入成功',
+        'settings.invalidFile': '⚠️ 数据文件格式错误',
+        'settings.parseError': '⚠️ 无法解析文件',
+        'settings.resetDone': '🗑 已还原为默认值',
+        'settings.confirmReset': '确定要清除所有数据并还原默认值吗？此操作无法撤销。',
+        'theme.dark': '深色',
+        'theme.light': '浅色',
+        'theme.ocean': '海洋',
+        'theme.forest': '森林',
+        'theme.rose': '玫瑰',
+        'theme.sunset': '日落',
+        'page.addPage': '+ 新增页面',
+        'page.pageName': '页面名称：',
+        'page.newPage': '新页面',
+        'page.rename': '重命名页面：',
+        'page.deleteConfirm': '确定删除页面“{name}”及其所有小组件吗？',
+        'page.cannotDelete': '⚠️ 无法删除最后一个页面',
+        'page.added': '✅ 已新增页面',
+        'page.renamed': '✅ 已重命名页面',
+        'page.deleted': '🗑 已删除页面',
+        'widget.addWidget': '小组件标题：',
+        'widget.newWidget': '新小组件',
+        'widget.rename': '重命名小组件：',
+        'widget.deleteConfirm': '确定删除小组件“{name}”吗？',
+        'widget.added': '✅ 已新增小组件',
+        'widget.renamed': '✅ 已重命名小组件',
+        'widget.deleted': '🗑 已删除小组件',
+        'widget.colourUpdated': '🎨 已更新小组件颜色',
+        'widget.colourTitle': '小组件颜色',
+        'widget.customColour': '自定义…',
+        'widget.resetColour': '重置',
+        'widget.viewSwitched': '👁 已切换为{view}视图',
+        'link.addLink': '+ 新增链接',
+        'link.addTitle': '新增链接',
+        'link.editTitle': '编辑链接',
+        'link.label': '名称',
+        'link.labelPlaceholder': '例如 Google',
+        'link.url': '网址',
+        'link.save': '保存',
+        'link.cancel': '取消',
+        'link.required': '⚠️ 名称与网址为必填',
+        'link.added': '✅ 已新增链接',
+        'link.updated': '✅ 已更新链接',
+        'link.deleted': '🗑 已删除链接',
+        'link.deleteConfirm': '确定删除链接“{name}”吗？',
+        'common.addWidget': '+ 新增小组件',
+        'common.toastSaveFailed': '⚠️ 无法保存 — 存储空间可能已满或被阻止。'
+    }
+};
+
+function t(key, vars) {
+    const lang = data.settings.lang || 'en';
+    const dict = I18N[lang] || I18N.en;
+    let str = dict[key] ?? I18N.en[key] ?? key;
+    if (vars) {
+        for (const k in vars) {
+            str = str.replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+        }
+    }
+    return str;
+}
+
+function applyLanguage() {
+    const lang = data.settings.lang || 'en';
+    document.documentElement.lang =
+        lang === 'zh-CN' ? 'zh-CN' : (lang === 'zh-TW' ? 'zh-TW' : 'en');
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+    });
+    document.querySelectorAll('[data-i18n-label]').forEach(el => {
+        el.label = t(el.dataset.i18nLabel);
+    });
+}
+
+/* ============================================================
+   3. DEFAULT DATA
+   ============================================================ */
+const DEFAULT_DATA = {
+    pages: [
+        {
+            id: 'page-1',
+            name: 'Home',
+            widgets: [
+                {
+                    id: 'w-sub',
+                    title: 'Sub',
+                    view: 'list',
+                    links: [
+                        { label: 'Sub HD', url: 'https://subhd.tv/' },
+                        { label: 'ASS 轉 SRT', url: 'https://lab.sorz.org/tools/asstosrt/' },
+                        { label: 'R3字幕網', url: 'https://r3sub.com/' },
+                        { label: 'zipl', url: 'https://briian.com/60553/' },
+                        { label: 'Random Password Generator', url: 'https://www.roboform.com/password-generator' },
+                        { label: 'うごもじ 顏文字', url: 'https://aidn.jp/ugomoji/' }
+                    ]
+                },
+                {
+                    id: 'w-portal',
+                    title: 'Portal',
+                    view: 'icons',   /* ← 示範：這個 widget 用圖示 */
+                    links: [
+                        { label: "Labubu's Zo Computer", url: 'https://labubu.zo.computer/' },
+                        { label: 'Manus', url: 'https://manus.im/app' },
+                        { label: 'Step', url: 'https://www.stepfun.com/chats/new' },
+                        { label: 'Gemini', url: 'https://gemini.google.com/' },
+                        { label: 'Gork', url: 'https://x.com/i/grok?focus=1' },
+                        { label: '豆包', url: 'https://www.doubao.com/chat/' },
+                        { label: 'Kimi Chat', url: 'https://kimi.moonshot.cn/' },
+                        { label: 'Qwen Chat', url: 'https://chat.qwen.ai/' },
+                        { label: 'GLM', url: 'https://chat.z.ai/' },
+                        { label: 'MiniMax', url: 'https://agent.minimax.io/' },
+                        { label: 'DeepSeek', url: 'https://chat.deepseek.com/a/chat' },
+                        { label: 'Xiaomi MiMo Studio', url: 'https://aistudio.xiaomimimo.com/#/c' },
+                        { label: 'Bing', url: 'https://www.bing.com/search?q=Hi&showconv=1' },
+                        { label: 'Arena Leaderboard', url: 'https://arena.ai/leaderboard/' },
+                        { label: 'Comparison of AI Models', url: 'https://artificialanalysis.ai/models' },
+                        { label: 'poe', url: 'https://poe.com/' },
+                        { label: 'perplexity', url: 'https://www.perplexity.ai/' },
+                        { label: 'Openrouter free Models', url: 'https://openrouter.ai/models/?q=free' },
+                        { label: 'Blazeai Model', url: 'https://blazeai.boxu.dev/#models' },
+                        { label: 'POE Models', url: 'https://poe.com/api/models' },
+                        { label: 'NVIDIA free Model', url: 'https://build.nvidia.com/models' },
+                        { label: 'WP Portal', url: 'https://thewire.wynnpalace.com/zh/' },
+                        { label: 'WM Portal', url: 'https://thewire.wynnmacau.com/' },
+                        { label: 'PhET Interactive Simulations', url: 'https://phet.colorado.edu/en/' },
+                        { label: 'PixelLab Create', url: 'https://www.pixellab.ai/create' },
+                        { label: 'Img2CSS', url: 'https://javier.xyz/img2css' },
+                        { label: 'Morphin', url: 'https://javier.xyz/morphin' }
+                    ]
+                },
+                {
+                    id: 'w-games',
+                    title: 'Games',
+                    view: 'list',
+                    links: [
+                        { label: 'Steam FreeTOPlay', url: 'https://store.steampowered.com/genre/Free%20to%20Play/' },
+                        { label: 'GOG com', url: 'https://www.gog.com/' },
+                        { label: 'Origin', url: 'https://www.origin.com/hkg/en-us/store' },
+                        { label: 'Epic Games', url: 'https://www.epicgames.com/store/en-US/' },
+                        { label: 'Ubisoft', url: 'https://www.ubisoft.com/en-us/' },
+                        { label: 'Store.my.games', url: 'https://store.my.games/' },
+                        { label: 'The Humble Store', url: 'https://www.humblebundle.com/store' },
+                        { label: 'Indiegala', url: 'https://www.indiegala.com/' }
+                    ]
+                },
+                {
+                    id: 'w-anime',
+                    title: 'Anime',
+                    view: 'list',
+                    links: [
+                        { label: '8comic', url: 'https://www.8comic.com/' },
+                        { label: 'limetorrents', url: 'https://www.limetorrents.to/' }
+                    ]
+                },
+                {
+                    id: 'w-store',
+                    title: 'Store',
+                    view: 'list',
+                    links: [
+                        { label: '华为VMALL', url: 'https://www.vmall.com/' },
+                        { label: '小米商城', url: 'https://www.mi.com/index.html' },
+                        { label: 'Meizu', url: 'https://www.meizu.com/' },
+                        { label: '小米有品', url: 'https://www.xiaomiyoupin.com/' },
+                        { label: 'OnePlus', url: 'https://www.oneplus.com/cn/store' },
+                        { label: 'realme', url: 'https://www.realme.com/cn/' },
+                        { label: 'iQOO - vivo', url: 'https://www.vivo.com.cn/vivo/iqoo/' },
+                        { label: 'vivo', url: 'https://www.vivo.com.cn/' },
+                        { label: 'oppo', url: 'https://www.oppo.com/cn/' },
+                        { label: 'ZTE', url: 'https://www.ztedevices.com/cn/' }
+                    ]
+                },
+                {
+                    id: 'w-netdrive',
+                    title: 'NetDrive',
+                    view: 'list',
+                    links: [
+                        { label: 'Dropbox', url: 'https://www.dropbox.com/home' },
+                        { label: 'OneDrive', url: 'https://onedrive.live.com/' },
+                        { label: 'GDrive', url: 'https://drive.google.com/drive/u/0/my-drive' },
+                        { label: 'MultCloud', url: 'https://www.multcloud.com/' }
+                    ]
+                },
+                {
+                    id: 'w-body',
+                    title: 'Body Training',
+                    view: 'list',
+                    links: [
+                        { label: '扁平足!', url: 'https://youtu.be/Gm9UTA9jmdU?start=450&end=609' },
+                        { label: 'Zhuhai marathon', url: 'https://www.zhuhaimarathon.com/' },
+                        { label: 'Hengqin marathon', url: 'http://www.hengqinmarathon.com/' },
+                        { label: '广州马拉松赛', url: 'http://www.guangzhou-marathon.com/' },
+                        { label: 'Marathon Photos Live', url: 'https://marathonphotos.live/' }
+                    ]
+                },
+                {
+                    id: 'w-new',
+                    title: 'New widget',
+                    view: 'list',
+                    links: [
+                        { label: 'pullfiles', url: 'https://www.pullfiles.net/' },
+                        { label: 'filegrab', url: 'https://filegrab.net/' },
+                        { label: 'onetoolstop', url: 'https://onetoolstop.com/any-file-downloader/' }
+                    ]
+                },
+                {
+                    id: 'w-popular',
+                    title: 'Popular',
+                    view: 'list',
+                    links: [
+                        { label: 'Facebook', url: 'http://www.facebook.com/' },
+                        { label: 'Instagram', url: 'http://instagram.com' },
+                        { label: 'LinkedIn', url: 'https://www.linkedin.com/learning/' },
+                        { label: 'WhatsApp Web', url: 'http://web.whatsapp.com/' },
+                        { label: 'wechat', url: 'https://web.wechat.com/?lang=en' },
+                        { label: 'Discord', url: 'https://discord.com/channels/@me' },
+                        { label: 'Telegram Web', url: 'https://web.telegram.org/' },
+                        { label: 'Keep', url: 'https://keep.google.com/u/0/' },
+                        { label: 'Google Drive', url: 'http://drive.google.com' },
+                        { label: 'Notion', url: 'https://www.notion.so/' },
+                        { label: 'Youtube', url: 'https://www.youtube.com/' },
+                        { label: 'ytcutter', url: 'https://ytcutter.com/' },
+                        { label: 'Sheets', url: 'https://docs.google.com/spreadsheets/u/0/' },
+                        { label: '抖音', url: 'https://www.douyin.com/recommend' },
+                        { label: 'OCR', url: 'https://lightpdf.com/tw/ocr' },
+                        { label: 'Temp Mail', url: 'https://temp-mail.org/en/' },
+                        { label: 'EZ Temp Mail', url: 'https://www.eztempmail.com/' },
+                        { label: 'apkcombo', url: 'https://apkcombo.com/downloader' },
+                        { label: 'infiCloud', url: 'https://wani.teracloud.jp/browser/' },
+                        { label: 'Chrome Remote Desktop', url: 'https://remotedesktop.google.com/access' },
+                        { label: 'SegFault', url: 'https://shell.segfault.net/#/login' },
+                        { label: 'Online Notepad', url: 'https://notepad.js.org/' }
+                    ]
+                }
+            ]
+        }
+    ],
+    settings: {
+        accentColor: '#7c8cf8',
+        bgColor: '#1a1a2e',
+        pageTitle: 'My Startpage',
+        searchEngine: 'https://www.google.com/search?q=',
+        theme: 'dark',
+        lang: 'en',
+        defaultView: 'list'    /* 新小工具預設檢視 */
+    }
+};
+
+/* ============================================================
+   4. STATE
+   ============================================================ */
+let data = loadData();
+let activePageIndex = 0;
+let dragState = { widgetId: null, fromPage: null };
+
+const AI_ENGINE_PREFIXES = [
+    'https://chat.deepseek.com',
+    'https://gemini.google.com',
+    'https://chat.qwen.ai',
+    'https://chatgpt.com',
+    'https://kimi.moonshot.cn',
+    'https://grok.com',
+    'https://www.perplexity.ai'
+];
+
+/* ============================================================
+   5. PERSISTENCE
+   ============================================================ */
+function loadData() {
+    try {
+        const raw = localStorage.getItem('startpage-data-v1');
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed.pages && Array.isArray(parsed.pages) && parsed.pages.length > 0) {
+                if (!parsed.settings) parsed.settings = {};
+                const def = DEFAULT_DATA.settings;
+                for (const k in def) {
+                    if (parsed.settings[k] === undefined) parsed.settings[k] = def[k];
+                }
+                // 補上舊資料缺少的 view 欄位
+                parsed.pages.forEach(p => {
+                    (p.widgets || []).forEach(w => {
+                        if (!w.view) w.view = 'list';
+                    });
+                });
+                return parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('Failed to load data, using defaults.', e);
+    }
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+function saveData() {
+    try {
+        localStorage.setItem('startpage-data-v1', JSON.stringify(data));
+    } catch (e) {
+        toast(t('common.toastSaveFailed'));
+    }
+}
+
+function uid(prefix = 'id') {
+    return prefix + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+function currentPage() {
+    if (!data.pages[activePageIndex]) activePageIndex = 0;
+    return data.pages[activePageIndex];
+}
+
+/* ============================================================
+   6. TOAST / CLOCK
+   ============================================================ */
+let toastTimer;
+function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+function updateClock() {
+    const now = new Date();
+    const lang = data.settings.lang || 'en';
+    const locale = lang === 'zh-CN' ? 'zh-CN' : (lang === 'zh-TW' ? 'zh-TW' : undefined);
+    const opts = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    document.getElementById('clock').textContent = now.toLocaleDateString(locale, opts);
+}
+
+/* ============================================================
+   7. COLOUR HELPERS
+   ============================================================ */
+function hexToRgb(hex) {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return m ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) } : null;
+}
+
+function lighten(hex, amount) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+    const clamp = v => Math.max(0, Math.min(255, v + amount));
+    return '#' + [clamp(rgb.r), clamp(rgb.g), clamp(rgb.b)]
+        .map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+/* ============================================================
+   8. APPLY THEME
+   ============================================================ */
+function applyTheme() {
+    const s = data.settings;
+    const theme = THEMES[s.theme] || THEMES.dark;
+
+    for (const k in theme.vars) {
+        document.documentElement.style.setProperty(k, theme.vars[k]);
+    }
+    document.body.dataset.light = theme.light ? '1' : '0';
+
+    if (s.accentColor) {
+        document.documentElement.style.setProperty('--accent', s.accentColor);
+        document.documentElement.style.setProperty('--accent-hover', lighten(s.accentColor, 20));
+    }
+    if (s.bgColor) {
+        document.documentElement.style.setProperty('--bg', s.bgColor);
+        const rgb = hexToRgb(s.bgColor);
+        if (rgb) {
+            const isLight = (rgb.r + rgb.g + rgb.b) / 3 > 160;
+            document.body.dataset.light = isLight ? '1' : '0';
+        }
+    }
+
+    document.title = s.pageTitle || 'My Startpage';
+    document.getElementById('pageTitleInput').value = s.pageTitle || '';
+    document.getElementById('accentColorPicker').value = s.accentColor;
+    document.getElementById('bgColorPicker').value = s.bgColor;
+    document.getElementById('themeSelect').value = s.theme || 'dark';
+    document.getElementById('langSelect').value = s.lang || 'en';
+    document.getElementById('defaultViewSelect').value = s.defaultView || 'list';
+
+    const sel = document.getElementById('searchEngine');
+    const values = Array.from(sel.options).map(o => o.value);
+    if (values.includes(s.searchEngine)) sel.value = s.searchEngine;
+    else { sel.selectedIndex = 0; s.searchEngine = sel.value; }
+}
+
+/* ============================================================
+   9. MASONRY LAYOUT
+   ============================================================ */
+const MASONRY_GAP = 20;
+const MASONRY_MIN_COL = 300;
+const MASONRY_MIN_COL_WIDE = 340;
+
+function layoutMasonry() {
+    const grid = document.getElementById('widgetsGrid');
+    if (!grid) return;
+
+    const items = Array.from(grid.children);
+    if (!items.length) {
+        grid.style.height = '0px';
+        return;
+    }
+
+    const containerWidth = grid.clientWidth;
+    if (containerWidth <= 0) return;
+
+    const minCol = window.innerWidth >= 1200 ? MASONRY_MIN_COL_WIDE : MASONRY_MIN_COL;
+    let cols = Math.floor((containerWidth + MASONRY_GAP) / (minCol + MASONRY_GAP));
+    cols = Math.max(1, cols);
+
+    const colWidth = (containerWidth - MASONRY_GAP * (cols - 1)) / cols;
+
+    for (let i = 0; i < items.length; i++) {
+        const el = items[i];
+        el.style.position = 'absolute';
+        el.style.left = '0px';
+        el.style.top = '0px';
+        el.style.width = colWidth + 'px';
+    }
+
+    const heightsMeasured = items.map(el => el.offsetHeight);
+
+    const colHeights = new Array(cols).fill(0);
+    for (let i = 0; i < items.length; i++) {
+        const el = items[i];
+        const h = heightsMeasured[i];
+
+        let shortest = 0;
+        for (let c = 1; c < cols; c++) {
+            if (colHeights[c] < colHeights[shortest]) shortest = c;
+        }
+
+        el.style.left = (shortest * (colWidth + MASONRY_GAP)) + 'px';
+        el.style.top = colHeights[shortest] + 'px';
+
+        colHeights[shortest] += h + MASONRY_GAP;
+    }
+
+    const totalHeight = Math.max(0, Math.max(...colHeights) - MASONRY_GAP);
+    grid.style.height = totalHeight + 'px';
+}
+
+let layoutRaf = null;
+function scheduleLayout() {
+    if (layoutRaf) cancelAnimationFrame(layoutRaf);
+    layoutRaf = requestAnimationFrame(() => {
+        layoutRaf = null;
+        layoutMasonry();
+    });
+}
+
+/* ============================================================
+   10. PER-WIDGET COLOUR
+   ============================================================ */
+const WIDGET_COLORS = [
+    '#7c8cf8', '#4ade80', '#f472b6', '#fb923c', '#facc15',
+    '#22d3ee', '#a78bfa', '#f87171', '#34d399', '#e879f9'
+];
+
+let colorPopEl = null;
+
+function applyWidgetColor(card, color) {
+    const c = color ? hexToRgb(color) : null;
+    if (c) {
+        card.style.setProperty('--w-color', color);
+        card.style.borderColor = `rgba(${c.r}, ${c.g}, ${c.b}, 0.4)`;
+        card.style.background =
+            `linear-gradient(160deg, rgba(${c.r}, ${c.g}, ${c.b}, 0.16), rgba(${c.r}, ${c.g}, ${c.b}, 0.035) 65%), var(--surface)`;
+        card.dataset.hasColor = '1';
+    } else {
+        card.style.removeProperty('--w-color');
+        card.style.borderColor = '';
+        card.style.background = '';
+        card.dataset.hasColor = '0';
+    }
+}
+
+function setWidgetColor(widgetId, color, silent) {
+    const page = currentPage();
+    const widget = page.widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+    if (color) widget.color = color;
+    else delete widget.color;
+    saveData();
+    const card = document.querySelector(`.widget[data-widget-id="${widgetId}"]`);
+    if (card) applyWidgetColor(card, color);
+    if (!silent) toast(t('widget.colourUpdated'));
+}
+
+function closeColorPop() {
+    if (colorPopEl) {
+        colorPopEl.remove();
+        colorPopEl = null;
+        document.removeEventListener('mousedown', outsideColorPop);
+        window.removeEventListener('resize', closeColorPop);
+        window.removeEventListener('scroll', closeColorPop, true);
+    }
+}
+
+function outsideColorPop(e) {
+    if (!colorPopEl) return;
+    if (colorPopEl.contains(e.target)) return;
+    if (e.target.closest && e.target.closest('[data-action="color"]')) return;
+    closeColorPop();
+}
+
+function openColorPop(anchor, widgetId) {
+    const wasOpen = colorPopEl !== null;
+    closeColorPop();
+    if (wasOpen) return;
+
+    const page = currentPage();
+    const widget = page.widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+
+    const pop = document.createElement('div');
+    pop.className = 'color-pop';
+    pop.innerHTML = `
+        <div class="color-pop-title">${escapeHtml(t('widget.colourTitle'))}</div>
+        <div class="color-pop-grid">
+            ${WIDGET_COLORS.map(c =>
+                `<button class="swatch${widget.color === c ? ' active' : ''}" data-color="${c}" style="--sw:${c}" title="${c}"></button>`
+            ).join('')}
+        </div>
+        <div class="color-pop-actions">
+            <label class="swatch-custom">
+                <input type="color" value="${widget.color || data.settings.accentColor}">
+                <span>${escapeHtml(t('widget.customColour'))}</span>
+            </label>
+            <button class="swatch-reset" data-color="">${escapeHtml(t('widget.resetColour'))}</button>
+        </div>
+    `;
+    document.body.appendChild(pop);
+
+    const r = anchor.getBoundingClientRect();
+    const w = 216;
+    let left = Math.min(r.left, window.innerWidth - w - 12);
+    left = Math.max(12, left);
+    let top = r.bottom + 8;
+    if (top + 200 > window.innerHeight) top = Math.max(12, r.top - 210);
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+
+    pop.querySelectorAll('.swatch[data-color]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setWidgetColor(widgetId, btn.dataset.color);
+            closeColorPop();
+        });
+    });
+
+    pop.querySelector('.swatch-reset').addEventListener('click', () => {
+        setWidgetColor(widgetId, '');
+        closeColorPop();
+    });
+
+    pop.querySelector('input[type=color]').addEventListener('input', (e) => {
+        setWidgetColor(widgetId, e.target.value, true);
+        pop.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    });
+
+    colorPopEl = pop;
+    setTimeout(() => {
+        document.addEventListener('mousedown', outsideColorPop);
+        window.addEventListener('resize', closeColorPop);
+        window.addEventListener('scroll', closeColorPop, true);
+    }, 0);
+}
+
+/* ============================================================
+   11. PER-WIDGET VIEW (list ↔ icons)
+   ============================================================ */
+function applyWidgetView(card, view) {
+    card.dataset.view = view || 'list';
+    const btn = card.querySelector('[data-action="view"]');
+    if (btn) {
+        const isIcons = (view === 'icons');
+        btn.textContent = isIcons ? '▤' : '▦';
+        btn.title = isIcons ? t('view.toList') : t('view.toIcons');
+    }
+}
+
+function toggleWidgetView(widgetId) {
+    const page = currentPage();
+    const widget = page.widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+
+    widget.view = (widget.view === 'icons') ? 'list' : 'icons';
+    saveData();
+
+    const card = document.querySelector(`.widget[data-widget-id="${widgetId}"]`);
+    if (card) {
+        applyWidgetView(card, widget.view);
+        // 高度變化，重排瀑布流（跑兩次保險）
+        scheduleLayout();
+        setTimeout(scheduleLayout, 60);
+    }
+
+    toast(t('widget.viewSwitched', {
+        view: t(widget.view === 'icons' ? 'view.icons' : 'view.list')
+    }));
+}
+
+/* ============================================================
+   12. RENDER
+   ============================================================ */
+function renderTabs() {
+    const container = document.getElementById('pageTabs');
+    container.innerHTML = '';
+
+    data.pages.forEach((page, i) => {
+        const tab = document.createElement('div');
+        tab.className = 'page-tab' + (i === activePageIndex ? ' active' : '');
+        tab.innerHTML = `<span>${escapeHtml(page.name)}</span>` +
+            (data.pages.length > 1 ? `<span class="tab-close" data-page="${i}" title="Delete page">×</span>` : '');
+        tab.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-close')) return;
+            activePageIndex = i;
+            renderAll();
+        });
+        tab.querySelector('.tab-close')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deletePage(i);
+        });
+        tab.addEventListener('dblclick', (e) => {
+            if (e.target.classList.contains('tab-close')) return;
+            renamePage(i);
+        });
+        container.appendChild(tab);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'page-tab-add';
+    addBtn.textContent = t('page.addPage');
+    addBtn.addEventListener('click', addPage);
+    container.appendChild(addBtn);
+}
+
+function renderWidgets() {
+    const grid = document.getElementById('widgetsGrid');
+    grid.innerHTML = '';
+
+    const page = currentPage();
+    if (!page) return;
+
+    page.widgets.forEach((widget) => {
+        const card = document.createElement('div');
+        card.className = 'widget';
+        card.dataset.widgetId = widget.id;
+        applyWidgetColor(card, widget.color || '');
+        applyWidgetView(card, widget.view || 'list');
+
+        /* ---- Header ---- */
+        const header = document.createElement('div');
+        header.className = 'widget-header';
+
+        const viewIsIcons = (widget.view === 'icons');
+        header.innerHTML = `
+            <span class="widget-title">${escapeHtml(widget.title)}</span>
+            <div class="widget-actions">
+                <button class="widget-action" data-action="view" title="${escapeHtml(viewIsIcons ? t('view.toList') : t('view.toIcons'))}">${viewIsIcons ? '▤' : '▦'}</button>
+                <button class="widget-action" data-action="color" title="${escapeHtml(t('widget.colourTitle'))}">🎨</button>
+                <button class="widget-action" data-action="rename" title="Rename">✏️</button>
+                <button class="widget-action delete" data-action="delete" title="Delete">🗑</button>
+            </div>
+        `;
+        header.querySelector('[data-action="view"]').addEventListener('click', (e) => {
+            e.stopPropagation(); e.preventDefault();
+            toggleWidgetView(widget.id);
+        });
+        header.querySelector('[data-action="color"]').addEventListener('click', (e) => {
+            e.stopPropagation(); e.preventDefault();
+            openColorPop(e.currentTarget, widget.id);
+        });
+        header.querySelector('[data-action="rename"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            renameWidget(widget.id);
+        });
+        header.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteWidget(widget.id);
+        });
+
+        // Drag
+        header.draggable = true;
+        header.addEventListener('dragstart', (e) => {
+            closeColorPop();
+            dragState = { widgetId: widget.id, fromPage: activePageIndex };
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', widget.id);
+        });
+        header.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+            document.querySelectorAll('.widget').forEach(w => w.classList.remove('drag-over'));
+        });
+
+        card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (dragState.widgetId && dragState.widgetId !== widget.id) {
+                card.classList.add('drag-over');
+            }
+        });
+        card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+        card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            card.classList.remove('drag-over');
+            if (!dragState.widgetId || dragState.widgetId === widget.id) return;
+            reorderWidgets(dragState.widgetId, widget.id);
+        });
+
+        /* ---- Body ---- */
+        const body = document.createElement('div');
+        body.className = 'widget-body';
+
+        const linkList = document.createElement('div');
+        linkList.className = 'link-list';
+
+        widget.links.forEach((link, li) => {
+            const item = document.createElement('a');
+            item.className = 'link-item';
+            item.href = link.url;
+            item.target = '_blank';
+            item.rel = 'noopener noreferrer';
+            item.title = link.label + '  ·  ' + link.url;
+            item.innerHTML = `
+                <img class="link-favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(getDomain(link.url))}&sz=64"
+                     onerror="this.style.visibility='hidden'" alt="">
+                <span class="link-label">${escapeHtml(link.label)}</span>
+                <span class="link-edit-actions">
+                    <button data-action="edit-link" title="${escapeHtml(t('link.editTitle'))}">✏️</button>
+                    <button data-action="delete-link" class="del" title="Delete">✕</button>
+                </span>
+            `;
+            item.querySelector('[data-action="edit-link"]').addEventListener('click', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                editLink(widget.id, li);
+            });
+            item.querySelector('[data-action="delete-link"]').addEventListener('click', (e) => {
+                e.preventDefault(); e.stopPropagation();
+                deleteLink(widget.id, li);
+            });
+            linkList.appendChild(item);
+        });
+
+        const addLinkBtn = document.createElement('button');
+        addLinkBtn.className = 'add-link-btn';
+        addLinkBtn.innerHTML = `<span>${escapeHtml(t('link.addLink'))}</span>`;
+        addLinkBtn.addEventListener('click', () => addLink(widget.id));
+        linkList.appendChild(addLinkBtn);
+
+        body.appendChild(linkList);
+        card.appendChild(header);
+        card.appendChild(body);
+        grid.appendChild(card);
+    });
+
+    const addCard = document.createElement('button');
+    addCard.className = 'add-widget-card';
+    addCard.innerHTML = escapeHtml(t('common.addWidget'));
+    addCard.addEventListener('click', addWidget);
+    grid.appendChild(addCard);
+
+    scheduleLayout();
+    setTimeout(scheduleLayout, 80);
+    setTimeout(scheduleLayout, 260);
+}
+
+function getDomain(url) {
+    try { return new URL(url).hostname; } catch { return ''; }
+}
+
+function renderAll() {
+    closeColorPop();
+    renderTabs();
+    renderWidgets();
+    applyLanguage();
+}
+
+/* ============================================================
+   13. PAGE CRUD
+   ============================================================ */
+function addPage() {
+    const name = prompt(t('page.pageName'), t('page.newPage'));
+    if (!name || !name.trim()) return;
+    data.pages.push({ id: uid('page'), name: name.trim(), widgets: [] });
+    activePageIndex = data.pages.length - 1;
+    saveData();
+    renderAll();
+    toast(t('page.added'));
+}
+
+function renamePage(index) {
+    const page = data.pages[index];
+    if (!page) return;
+    const name = prompt(t('page.rename'), page.name);
+    if (!name || !name.trim()) return;
+    page.name = name.trim();
+    saveData();
+    renderAll();
+    toast(t('page.renamed'));
+}
+
+function deletePage(index) {
+    if (data.pages.length <= 1) {
+        toast(t('page.cannotDelete'));
+        return;
+    }
+    if (!confirm(t('page.deleteConfirm', { name: data.pages[index].name }))) return;
+    data.pages.splice(index, 1);
+    if (activePageIndex >= data.pages.length) activePageIndex = data.pages.length - 1;
+    saveData();
+    renderAll();
+    toast(t('page.deleted'));
+}
+
+/* ============================================================
+   14. WIDGET CRUD
+   ============================================================ */
+function addWidget() {
+    const title = prompt(t('widget.addWidget'), t('widget.newWidget'));
+    if (!title || !title.trim()) return;
+    const page = currentPage();
+    page.widgets.push({
+        id: uid('w'),
+        title: title.trim(),
+        view: data.settings.defaultView || 'list',
+        links: []
+    });
+    saveData();
+    renderWidgets();
+    toast(t('widget.added'));
+}
+
+function renameWidget(widgetId) {
+    const page = currentPage();
+    const widget = page.widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+    const title = prompt(t('widget.rename'), widget.title);
+    if (!title || !title.trim()) return;
+    widget.title = title.trim();
+    saveData();
+    renderWidgets();
+    toast(t('widget.renamed'));
+}
+
+function deleteWidget(widgetId) {
+    const page = currentPage();
+    const widget = page.widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+    if (!confirm(t('widget.deleteConfirm', { name: widget.title }))) return;
+    page.widgets = page.widgets.filter(w => w.id !== widgetId);
+    saveData();
+    renderWidgets();
+    toast(t('widget.deleted'));
+}
+
+function reorderWidgets(fromId, toId) {
+    const page = currentPage();
+    const fromIdx = page.widgets.findIndex(w => w.id === fromId);
+    const toIdx = page.widgets.findIndex(w => w.id === toId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const [moved] = page.widgets.splice(fromIdx, 1);
+    page.widgets.splice(toIdx, 0, moved);
+    saveData();
+    renderWidgets();
+}
+
+/* ============================================================
+   15. LINK CRUD
+   ============================================================ */
+function addLink(widgetId) {
+    showLinkModal(null, (label, url) => {
+        const page = currentPage();
+        const widget = page.widgets.find(w => w.id === widgetId);
+        if (!widget) return;
+        widget.links.push({ label, url });
+        saveData();
+        renderWidgets();
+        toast(t('link.added'));
+    });
+}
+
+function editLink(widgetId, linkIndex) {
+    const page = currentPage();
+    const widget = page.widgets.find(w => w.id === widgetId);
+    if (!widget || !widget.links[linkIndex]) return;
+    const link = widget.links[linkIndex];
+    showLinkModal(link, (label, url) => {
+        widget.links[linkIndex] = { label, url };
+        saveData();
+        renderWidgets();
+        toast(t('link.updated'));
+    });
+}
+
+function deleteLink(widgetId, linkIndex) {
+    const page = currentPage();
+    const widget = page.widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+    const link = widget.links[linkIndex];
+    if (!link) return;
+    if (!confirm(t('link.deleteConfirm', { name: link.label }))) return;
+    widget.links.splice(linkIndex, 1);
+    saveData();
+    renderWidgets();
+    toast(t('link.deleted'));
+}
+
+/* ============================================================
+   16. LINK MODAL
+   ============================================================ */
+function showLinkModal(existingLink, onSave) {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+
+    content.innerHTML = `
+        <h3>${escapeHtml(existingLink ? t('link.editTitle') : t('link.addTitle'))}</h3>
+        <div class="form-group">
+            <label>${escapeHtml(t('link.label'))}</label>
+            <input type="text" id="modalLinkLabel" value="${existingLink ? escapeHtml(existingLink.label) : ''}" placeholder="${escapeHtml(t('link.labelPlaceholder'))}">
+        </div>
+        <div class="form-group">
+            <label>${escapeHtml(t('link.url'))}</label>
+            <input type="text" id="modalLinkUrl" value="${existingLink ? escapeHtml(existingLink.url) : ''}" placeholder="https://...">
+        </div>
+        <div class="modal-actions">
+            <button class="btn" id="modalCancel">${escapeHtml(t('link.cancel'))}</button>
+            <button class="btn btn-primary" id="modalSave">${escapeHtml(t('link.save'))}</button>
+        </div>
+    `;
+
+    overlay.classList.add('open');
+    const close = () => overlay.classList.remove('open');
+
+    document.getElementById('modalCancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+    document.getElementById('modalSave').addEventListener('click', () => {
+        const label = document.getElementById('modalLinkLabel').value.trim();
+        let url = document.getElementById('modalLinkUrl').value.trim();
+        if (!label || !url) { toast(t('link.required')); return; }
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        onSave(label, url);
+        close();
+    });
+
+    content.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('modalSave').click(); }
+        if (e.key === 'Escape') close();
+    });
+
+    setTimeout(() => document.getElementById('modalLinkLabel')?.focus(), 50);
+}
+
+/* ============================================================
+   17. SETTINGS BINDINGS
+   ============================================================ */
+function toggleSettings() {
+    document.getElementById('settingsPanel').classList.toggle('open');
+}
+
+function bindSettings() {
+    document.getElementById('settingsBtn').addEventListener('click', toggleSettings);
+
+    document.getElementById('themeSelect').addEventListener('change', (e) => {
+        data.settings.theme = e.target.value;
+        const theme = THEMES[data.settings.theme];
+        if (theme) {
+            data.settings.accentColor = theme.vars['--accent'];
+            data.settings.bgColor = theme.vars['--bg'];
+        }
+        applyTheme();
+        saveData();
+    });
+
+    document.getElementById('langSelect').addEventListener('change', (e) => {
+        data.settings.lang = e.target.value;
+        saveData();
+        applyLanguage();
+        renderAll();
+        updateClock();
+    });
+
+    document.getElementById('defaultViewSelect').addEventListener('change', (e) => {
+        data.settings.defaultView = e.target.value;
+        saveData();
+    });
+
+    document.getElementById('accentColorPicker').addEventListener('input', (e) => {
+        data.settings.accentColor = e.target.value;
+        applyTheme();
+        saveData();
+    });
+
+    document.getElementById('bgColorPicker').addEventListener('input', (e) => {
+        data.settings.bgColor = e.target.value;
+        applyTheme();
+        saveData();
+    });
+
+    document.getElementById('pageTitleInput').addEventListener('input', (e) => {
+        data.settings.pageTitle = e.target.value;
+        document.title = e.target.value || 'My Startpage';
+        saveData();
+    });
+
+    document.getElementById('searchEngine').addEventListener('change', (e) => {
+        data.settings.searchEngine = e.target.value;
+        saveData();
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'startpage-data.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        toast(t('settings.exported'));
+    });
+
+    document.getElementById('importBtn').addEventListener('click', () => {
+        document.getElementById('importFileInput').click();
+    });
+
+    document.getElementById('importFileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const parsed = JSON.parse(ev.target.result);
+                if (!parsed.pages || !Array.isArray(parsed.pages)) {
+                    toast(t('settings.invalidFile'));
+                    return;
+                }
+                data = parsed;
+                if (!data.settings) data.settings = JSON.parse(JSON.stringify(DEFAULT_DATA.settings));
+                const def = DEFAULT_DATA.settings;
+                for (const k in def) if (data.settings[k] === undefined) data.settings[k] = def[k];
+                data.pages.forEach(p => (p.widgets || []).forEach(w => {
+                    if (!w.view) w.view = 'list';
+                }));
+                activePageIndex = 0;
+                applyTheme();
+                saveData();
+                renderAll();
+                updateClock();
+                toast(t('settings.imported'));
+            } catch (err) {
+                toast(t('settings.parseError'));
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    });
+
+    document.getElementById('clearAllBtn').addEventListener('click', () => {
+        if (!confirm(t('settings.confirmReset'))) return;
+        localStorage.removeItem('startpage-data-v1');
+        data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        activePageIndex = 0;
+        applyTheme();
+        saveData();
+        renderAll();
+        updateClock();
+        toast(t('settings.resetDone'));
+    });
+}
+
+/* ============================================================
+   18. SEARCH
+   ============================================================ */
+function isAiEngine(url) {
+    return AI_ENGINE_PREFIXES.some(p => url.startsWith(p));
+}
+
+function bindSearch() {
+    const input = document.getElementById('searchInput');
+    const sel = document.getElementById('searchEngine');
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+
+        const q = input.value.trim();
+        if (!q) return;
+
+        const engine = sel.value;
+        const engineName = sel.selectedOptions[0]?.textContent || 'AI';
+
+        const isUrl = /^https?:\/\//i.test(q);
+        const looksLikeDomain = !isUrl && /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(q);
+
+        let target;
+        let usedAi = false;
+
+        if (isUrl) {
+            target = q;
+        } else if (looksLikeDomain) {
+            target = 'https://' + q;
+        } else {
+            target = engine + encodeURIComponent(q);
+            usedAi = isAiEngine(engine);
+        }
+
+        window.open(target, '_blank', 'noopener');
+
+        if (usedAi) {
+            navigator.clipboard?.writeText(q).then(
+                () => toast(t('search.aiOpened', { name: engineName })),
+                () => toast(t('search.aiOpenedSimple', { name: engineName }))
+            );
+        }
+
+        input.value = '';
+    });
+}
+
+/* ============================================================
+   19. MISC
+   ============================================================ */
+function bindAddWidget() {
+    document.getElementById('addWidgetBtn').addEventListener('click', addWidget);
+}
+
+function bindKeyboard() {
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
+            e.preventDefault();
+            addPage();
+        }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'w') {
+            e.preventDefault();
+            addWidget();
+        }
+        if (e.key === 'Escape') {
+            document.getElementById('modalOverlay').classList.remove('open');
+            closeColorPop();
+        }
+    });
+}
+
+/* ============================================================
+   20. UTILS
+   ============================================================ */
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* ============================================================
+   21. INIT
+   ============================================================ */
+function init() {
+    applyTheme();
+    applyLanguage();
+    bindSettings();
+    bindSearch();
+    bindAddWidget();
+    bindKeyboard();
+    renderAll();
+    updateClock();
+    setInterval(updateClock, 30000);
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(layoutMasonry, 120);
+    });
+
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(scheduleLayout);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
