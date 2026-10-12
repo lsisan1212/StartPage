@@ -675,6 +675,19 @@
         .widget.dragging { opacity: 0.5; }
         .widget.drag-over { border-color: var(--accent); border-style: dashed; }
 
+        /* ===== Link drag-to-reorder ===== */
+        .link-item.dragging { opacity: 0.4; }
+        .link-item.drop-ph {
+            border: 2px dashed var(--accent);
+            background: transparent;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .widget[data-view="icons"] .link-item.drop-ph { min-height: 64px; }
+
+        /* ===== Widget drop onto page tab ===== */
+        .page-tab.drag-over { border-color: var(--accent); background: var(--surface-hover); color: var(--text); }
+
         /* ===== Settings Panel ===== */
         .settings-panel {
             display: none;
@@ -1054,6 +1067,7 @@ const I18N = {
         'widget.added': '✅ Widget added',
         'widget.renamed': '✅ Widget renamed',
         'widget.deleted': '🗑 Widget deleted',
+        'widget.movedToPage': '✅ Widget moved to page "{name}"',
         'widget.colourUpdated': '🎨 Widget colour updated',
         'widget.colourTitle': 'Widget colour',
         'widget.customColour': 'Custom…',
@@ -1124,6 +1138,7 @@ const I18N = {
         'widget.added': '✅ 已新增小工具',
         'widget.renamed': '✅ 已重新命名小工具',
         'widget.deleted': '🗑 已刪除小工具',
+        'widget.movedToPage': '✅ 已將小工具移至頁面「{name}」',
         'widget.colourUpdated': '🎨 已更新小工具顏色',
         'widget.colourTitle': '小工具顏色',
         'widget.customColour': '自訂…',
@@ -1194,6 +1209,7 @@ const I18N = {
         'widget.added': '✅ 已新增小组件',
         'widget.renamed': '✅ 已重命名小组件',
         'widget.deleted': '🗑 已删除小组件',
+        'widget.movedToPage': '✅ 已将小组件移至页面“{name}”',
         'widget.colourUpdated': '🎨 已更新小组件颜色',
         'widget.colourTitle': '小组件颜色',
         'widget.customColour': '自定义…',
@@ -1424,6 +1440,8 @@ const DEFAULT_DATA = {
 let data = loadData();
 let activePageIndex = 0;
 let dragState = { widgetId: null, fromPage: null };
+let linkDrag = null;      /* { widgetId, linkIndex, el } — link 拖拽中 */
+let linkPhEl = null;      /* link 重排 placeholder */
 
 const AI_ENGINE_PREFIXES = [
     'https://chat.deepseek.com',
@@ -1797,6 +1815,20 @@ function renderTabs() {
             if (e.target.classList.contains('tab-close')) return;
             renamePage(i);
         });
+        /* ---- Drop widget onto tab = move widget to that page ---- */
+        tab.addEventListener('dragover', (e) => {
+            if (!dragState.widgetId || i === activePageIndex) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            tab.classList.add('drag-over');
+        });
+        tab.addEventListener('dragleave', () => tab.classList.remove('drag-over'));
+        tab.addEventListener('drop', (e) => {
+            e.preventDefault();
+            tab.classList.remove('drag-over');
+            if (!dragState.widgetId || i === activePageIndex) return;
+            moveWidgetToPage(dragState.widgetId, i);
+        });
         container.appendChild(tab);
     });
 
@@ -1863,10 +1895,13 @@ function renderWidgets() {
         });
         header.addEventListener('dragend', () => {
             card.classList.remove('dragging');
+            dragState = { widgetId: null, fromPage: null };
             document.querySelectorAll('.widget').forEach(w => w.classList.remove('drag-over'));
+            document.querySelectorAll('.page-tab').forEach(tb => tb.classList.remove('drag-over'));
         });
 
         card.addEventListener('dragover', (e) => {
+            if (!dragState.widgetId) return; /* link 拖曳中唔當 widget drop zone */
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
             if (dragState.widgetId && dragState.widgetId !== widget.id) {
@@ -1912,6 +1947,22 @@ function renderWidgets() {
                 e.preventDefault(); e.stopPropagation();
                 deleteLink(widget.id, li);
             });
+
+            /* ---- Link drag-to-reorder ---- */
+            item.draggable = true;
+            item.addEventListener('dragstart', (e) => {
+                closeColorPop();
+                linkDrag = { widgetId: widget.id, linkIndex: li, el: item };
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', String(li));
+            });
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
+                linkDrag = null;
+                clearLinkPh();
+                document.querySelectorAll('.link-item').forEach(el => el.classList.remove('drag-over'));
+            });
             linkList.appendChild(item);
         });
 
@@ -1920,6 +1971,32 @@ function renderWidgets() {
         addLinkBtn.innerHTML = `<span>${escapeHtml(t('link.addLink'))}</span>`;
         addLinkBtn.addEventListener('click', () => addLink(widget.id));
         linkList.appendChild(addLinkBtn);
+
+        /* ---- Link drop zone（同一 widget 內重排） ---- */
+        linkList.addEventListener('dragover', (e) => {
+            if (!linkDrag || linkDrag.widgetId !== widget.id) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const before = getInsertBeforeEl(linkList, e.clientX, e.clientY);
+            const ph = getLinkPh();
+            if (before) linkList.insertBefore(ph, before);
+            else linkList.insertBefore(ph, addLinkBtn);
+        });
+        linkList.addEventListener('drop', (e) => {
+            if (!linkDrag || linkDrag.widgetId !== widget.id) return;
+            e.preventDefault();
+            const ph = linkPhEl;
+            if (!ph || ph.parentNode !== linkList) return;
+            /* 數 placeholder 前「非 placeholder、非被拖」嘅 link 數 = 新 index */
+            let idx = 0;
+            let node = ph.previousElementSibling;
+            while (node) {
+                if (!node.classList.contains('drop-ph') && node !== linkDrag.el) idx++;
+                node = node.previousElementSibling;
+            }
+            reorderLinks(widget.id, linkDrag.linkIndex, idx);
+            clearLinkPh();
+        });
 
         body.appendChild(linkList);
         card.appendChild(header);
@@ -2034,6 +2111,62 @@ function reorderWidgets(fromId, toId) {
     if (fromIdx === -1 || toIdx === -1) return;
     const [moved] = page.widgets.splice(fromIdx, 1);
     page.widgets.splice(toIdx, 0, moved);
+    saveData();
+    renderWidgets();
+}
+
+/* ============================================================
+   14b. DRAG TO PAGE / LINK REORDER
+   ============================================================ */
+
+/** 插入點計算：返回要 insertBefore 的 element（null = 插末尾）。
+ *  同時支援直列 list 同 icons grid（same-row 用 x，否則用 y） */
+function getInsertBeforeEl(container, x, y) {
+    const els = Array.from(container.querySelectorAll('.link-item:not(.dragging):not(.drop-ph)'));
+    for (const el of els) {
+        const b = el.getBoundingClientRect();
+        const dy = y - (b.top + b.height / 2);
+        const dx = x - (b.left + b.width / 2);
+        const sameRow = Math.abs(dy) <= b.height / 2 + 2;
+        if (sameRow ? dx < 0 : dy < 0) return el;
+    }
+    return null;
+}
+
+function getLinkPh() {
+    if (!linkPhEl) {
+        linkPhEl = document.createElement('div');
+        linkPhEl.className = 'link-item drop-ph';
+    }
+    return linkPhEl;
+}
+function clearLinkPh() {
+    if (linkPhEl && linkPhEl.parentNode) linkPhEl.parentNode.removeChild(linkPhEl);
+}
+
+/** 將 widget 拖到另一個 page 的 tab 上 → 移過去並切換到該頁 */
+function moveWidgetToPage(widgetId, targetPageIndex) {
+    const fromPage = data.pages[activePageIndex];
+    const toPage = data.pages[targetPageIndex];
+    if (!fromPage || !toPage || fromPage === toPage) return;
+    const idx = fromPage.widgets.findIndex(w => w.id === widgetId);
+    if (idx === -1) return;
+    const [moved] = fromPage.widgets.splice(idx, 1);
+    toPage.widgets.push(moved);
+    activePageIndex = targetPageIndex;
+    saveData();
+    renderAll();
+    toast(t('widget.movedToPage', { name: toPage.name }));
+}
+
+/** 同一 widget 內連結重排 */
+function reorderLinks(widgetId, fromIdx, toIdx) {
+    const page = currentPage();
+    const widget = page.widgets.find(w => w.id === widgetId);
+    if (!widget || !widget.links) return;
+    if (fromIdx < 0 || fromIdx >= widget.links.length) return;
+    const [moved] = widget.links.splice(fromIdx, 1);
+    widget.links.splice(Math.max(0, Math.min(toIdx, widget.links.length)), 0, moved);
     saveData();
     renderWidgets();
 }
