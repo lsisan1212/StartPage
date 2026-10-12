@@ -3084,10 +3084,7 @@ async function handleXferHash() {
 function bindXferUI() {
     /* 主路徑：直接出五位數字 code；QR 係 modal 內嘅後備 */
     document.getElementById('sendQrBtn').addEventListener('click', openSendCodeModal);
-    document.getElementById('receiveCodeBtn').addEventListener('click', () => {
-        codePurgeExpired();   /* best-effort 清過期碼 */
-        openReceiveCodeModal();
-    });
+    document.getElementById('receiveCodeBtn').addEventListener('click', openReceiveCodeModal);
 
     document.getElementById('xferRestartBtn').addEventListener('click', () => {
         xferClearBuf();
@@ -3233,88 +3230,59 @@ async function openScannerModal() {
 }
 
 /* ============================================================
-   19c. CODE TRANSFER（雲端五位數字：PC 產生 → 手機輸入領取）
-   數據路：JSON → deflate-raw → base64url → 雲端表 startpage_codes
+   19c. CODE TRANSFER（五位數字：PC 產生 → 手機輸入領取）
+   數據路：JSON → deflate-raw → base64url → startpage-xfer-api
+   （獨立 Node 服務，内存存 code→payload，24h TTL，CORS 只允許本頁）
    ============================================================ */
-const CLOUD_SDK_URL = 'https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js';
-const CLOUD_CFG = {
-    endpoint: 'https://startpage-00353.app.workbuddy.host',
-    oauthRelayBaseUrl: 'https://www.workbuddy.cn/v2/as/genie-baas/oauth',
-    publishableKey: 'wbpk_c9Bz324kWYXgbQi1xIJR3s_zfNj8CQXe10Fw27hnYRJCuJbSMkLf45d'
-};
+const XFER_API_BASE = 'https://startpage-00353.app.workbuddy.host';
 const XFER_CODE_TTL = 24 * 60 * 60 * 1000;   /* code 有效期 24 小時 */
 const XFER_CODE_POLL = 5000;                 /* PC 端輪詢間隔 */
+const XFER_FETCH_TIMEOUT = 15000;            /* 單次請求超時 */
 
-let cloudClient = null;
-let cloudClientPromise = null;
-
-/** lazy-init 雲端 client（SDK 用先至載） */
-function getCloud() {
-    if (cloudClient) return Promise.resolve(cloudClient);
-    if (cloudClientPromise) return cloudClientPromise;
-    cloudClientPromise = (async () => {
-        if (typeof window.WorkBuddyCloud === 'undefined') {
-            await loadScript(CLOUD_SDK_URL);
-        }
-        if (typeof window.WorkBuddyCloud === 'undefined' || !window.WorkBuddyCloud.createWorkBuddyCloud) {
-            throw new Error('cloud sdk unavailable');
-        }
-        cloudClient = window.WorkBuddyCloud.createWorkBuddyCloud({
-            endpoint: CLOUD_CFG.endpoint,
-            oauthRelayBaseUrl: CLOUD_CFG.oauthRelayBaseUrl,
-            publishableKey: CLOUD_CFG.publishableKey
-        });
-        return cloudClient;
-    })();
-    cloudClientPromise.catch(() => { cloudClientPromise = null; });
-    return cloudClientPromise;
+/** 加超時嘅 fetch（服務休眠／掛住時唔會無限等） */
+function xferFetch(url, options = {}) {
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), XFER_FETCH_TIMEOUT);
+    return fetch(url, Object.assign({}, options, { signal: ac.signal }))
+        .finally(() => clearTimeout(timer));
 }
 
 function randomCode() {
     return String(10000 + Math.floor(Math.random() * 90000));   /* 10000–99999 */
 }
 
-/** 上傳 payload → 五位數字 code（撞號 23505 會重試） */
+/** 上傳 payload → 五位數字 code（撞號 409 會重試） */
 async function codeUpload(payload) {
-    const cloud = await getCloud();
-    let lastErr = null;
     for (let i = 0; i < 6; i++) {
         const code = randomCode();
-        const { error } = await cloud.database.from('startpage_codes').insert({ code, payload });
-        if (!error) return code;
-        lastErr = error;
-        if (error.code === '23505') continue;
-        throw error;
+        const res = await xferFetch(XFER_API_BASE + '/api/code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, payload })
+        });
+        if (res.status === 409) continue;               /* 撞號 → 換個 */
+        if (!res.ok) throw new Error('upload failed: ' + res.status);
+        const j = await res.json().catch(() => null);
+        if (!j || !/^\d{5}$/.test(j.code || '')) throw new Error('bad response');
+        return j.code;
     }
-    throw lastErr || new Error('code gen failed');
+    throw new Error('code gen failed');
 }
 
 /** 按 code 查 payload；搵唔到 → null */
 async function codeLookup(code) {
-    const cloud = await getCloud();
-    const { data, error } = await cloud.database
-        .from('startpage_codes')
-        .select('payload, created_at')
-        .eq('code', code)
-        .maybeSingle();
-    if (error) throw error;
-    return data || null;
+    const res = await xferFetch(XFER_API_BASE + '/api/code/' + encodeURIComponent(code));
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error('lookup failed: ' + res.status);
+    const j = await res.json().catch(() => null);
+    if (!j || typeof j.payload !== 'string') return null;
+    return { payload: j.payload, created_at: j.createdAt };
 }
 
 async function codeRemove(code) {
     try {
-        const cloud = await getCloud();
-        await cloud.database.from('startpage_codes').delete().eq('code', code);
+        await xferFetch(XFER_API_BASE + '/api/code/' + encodeURIComponent(code), { method: 'DELETE' });
     } catch (e) { /* best-effort */ }
-}
-
-/** 順手清走過期碼（best-effort，唔阻塞 UI） */
-function codePurgeExpired() {
-    getCloud().then(cloud =>
-        cloud.database.from('startpage_codes')
-            .delete()
-            .lt('created_at', new Date(Date.now() - XFER_CODE_TTL).toISOString())
-    ).catch(() => { /* ignore */ });
 }
 
 function codeIsFresh(row) {
