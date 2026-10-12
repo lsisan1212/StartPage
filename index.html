@@ -749,6 +749,14 @@
             margin: 4px 0 10px;
         }
 
+        .settings-hint {
+            flex-basis: 100%;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-top: 2px;
+        }
+
         .settings-section-title {
             flex-basis: 100%;
             font-size: 0.7rem;
@@ -867,7 +875,10 @@
         <button class="btn" id="exportBtn" data-i18n="settings.export">📤 Export data</button>
         <button class="btn" id="importBtn" data-i18n="settings.import">📥 Import data</button>
         <input type="file" id="importFileInput" accept=".json" style="display:none">
+        <button class="btn" id="copyDataBtn" data-i18n="settings.copyData">📋 Copy data</button>
+        <button class="btn" id="pasteDataBtn" data-i18n="settings.pasteData">📋 Paste data</button>
         <button class="btn btn-danger" id="clearAllBtn" data-i18n="settings.clearAll">🗑 Clear all data</button>
+        <div class="settings-hint" data-i18n="settings.localHint">Data is stored in this browser only. To use the same bookmarks on another device (e.g. phone), use Copy data here and Paste data there — or Export / Import a file.</div>
     </div>
 </div>
 
@@ -1045,6 +1056,15 @@ const I18N = {
         'settings.parseError': '⚠️ Could not parse file',
         'settings.resetDone': '🗑 Reset to defaults',
         'settings.confirmReset': 'Clear ALL data and reset to defaults? This cannot be undone.',
+        'settings.copyData': '📋 Copy data',
+        'settings.pasteData': '📋 Paste data',
+        'settings.localHint': 'Data is stored in this browser only. To use the same bookmarks on another device (e.g. phone), use Copy data here and Paste data there — or Export / Import a file.',
+        'settings.copied': '✅ Data copied to clipboard',
+        'settings.copyTitle': 'Copy data',
+        'settings.pasteTitle': 'Paste data',
+        'settings.pastePlaceholder': 'Paste the JSON data copied from the other device here…',
+        'settings.pasteApply': 'Apply',
+        'settings.confirmReplace': 'Replace all current data with the pasted content?',
         'theme.dark': 'Dark',
         'theme.light': 'Light',
         'theme.ocean': 'Ocean',
@@ -1116,6 +1136,15 @@ const I18N = {
         'settings.parseError': '⚠️ 無法解析檔案',
         'settings.resetDone': '🗑 已還原為預設值',
         'settings.confirmReset': '確定要清除所有資料並還原預設值嗎？此動作無法復原。',
+        'settings.copyData': '📋 複製數據',
+        'settings.pasteData': '📋 貼上數據',
+        'settings.localHint': '數據只存喺依部瀏覽器。想換裝置（例如手機）用同一批書籤：喺依部按「複製數據」，再去第二部裝置按「貼上數據」；或者用匯出／匯入檔案。',
+        'settings.copied': '✅ 已複製到剪貼簿',
+        'settings.copyTitle': '複製數據',
+        'settings.pasteTitle': '貼上數據',
+        'settings.pastePlaceholder': '將另一部裝置複製嘅 JSON 數據貼到這裏…',
+        'settings.pasteApply': '套用',
+        'settings.confirmReplace': '確定要用貼上嘅內容取代現有數據嗎？',
         'theme.dark': '深色',
         'theme.light': '淺色',
         'theme.ocean': '海洋',
@@ -1187,6 +1216,15 @@ const I18N = {
         'settings.parseError': '⚠️ 无法解析文件',
         'settings.resetDone': '🗑 已还原为默认值',
         'settings.confirmReset': '确定要清除所有数据并还原默认值吗？此操作无法撤销。',
+        'settings.copyData': '📋 复制数据',
+        'settings.pasteData': '📋 粘贴数据',
+        'settings.localHint': '数据只存在本浏览器中。想在其它设备（如手机）用同一批书签：在本设备点「复制数据」，再到另一设备点「粘贴数据」；或用导出／导入文件。',
+        'settings.copied': '✅ 已复制到剪贴板',
+        'settings.copyTitle': '复制数据',
+        'settings.pasteTitle': '粘贴数据',
+        'settings.pastePlaceholder': '将另一台设备复制的 JSON 数据粘贴到这里…',
+        'settings.pasteApply': '应用',
+        'settings.confirmReplace': '确定要用粘贴的内容替换现有数据吗？',
         'theme.dark': '深色',
         'theme.light': '浅色',
         'theme.ocean': '海洋',
@@ -2236,10 +2274,23 @@ function showLinkModal(existingLink, onSave) {
     `;
 
     overlay.classList.add('open');
-    const close = () => overlay.classList.remove('open');
+
+    /* 注意：overlay / content 係持久元素，listener 必須喺 close 時移除，
+       否則每次開 modal 都疊積一次 → 按 Enter 會重複觸發 save（建多條記錄） */
+    const close = () => {
+        overlay.classList.remove('open');
+        overlay.removeEventListener('click', onOverlayClick);
+        content.removeEventListener('keydown', onKeydown);
+    };
+    const onOverlayClick = (e) => { if (e.target === overlay) close(); };
+    const onKeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('modalSave').click(); }
+        if (e.key === 'Escape') close();
+    };
 
     document.getElementById('modalCancel').addEventListener('click', close);
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    overlay.addEventListener('click', onOverlayClick);
+    content.addEventListener('keydown', onKeydown);
 
     document.getElementById('modalSave').addEventListener('click', () => {
         const label = document.getElementById('modalLinkLabel').value.trim();
@@ -2248,11 +2299,6 @@ function showLinkModal(existingLink, onSave) {
         if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
         onSave(label, url);
         close();
-    });
-
-    content.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('modalSave').click(); }
-        if (e.key === 'Escape') close();
     });
 
     setTimeout(() => document.getElementById('modalLinkLabel')?.focus(), 50);
@@ -2326,6 +2372,32 @@ function bindSettings() {
         toast(t('settings.exported'));
     });
 
+    /* ---- Copy data to clipboard（跨裝置轉移：PC copy → 手機 paste） ---- */
+    document.getElementById('copyDataBtn').addEventListener('click', async () => {
+        const text = JSON.stringify(data);
+        try {
+            await navigator.clipboard.writeText(text);
+            toast(t('settings.copied'));
+        } catch (e) {
+            // clipboard API 失敗（舊瀏覽器／權限）→ 彈 textarea 手動複製
+            showTextModal(t('settings.copyTitle'), text, null, true);
+        }
+    });
+
+    /* ---- Paste data from clipboard ---- */
+    document.getElementById('pasteDataBtn').addEventListener('click', async () => {
+        let text = null;
+        try {
+            text = await navigator.clipboard.readText();
+        } catch (e) { text = null; }
+        if (text && text.trim()) {
+            tryApplyPasted(text);
+            return;
+        }
+        // 讀唔到 clipboard（常見於手機）→ 彈 textarea 手動貼上
+        showTextModal(t('settings.pasteTitle'), '', (v) => tryApplyPasted(v), false);
+    });
+
     document.getElementById('importBtn').addEventListener('click', () => {
         document.getElementById('importFileInput').click();
     });
@@ -2336,24 +2408,7 @@ function bindSettings() {
         const reader = new FileReader();
         reader.onload = (ev) => {
             try {
-                const parsed = JSON.parse(ev.target.result);
-                if (!parsed.pages || !Array.isArray(parsed.pages)) {
-                    toast(t('settings.invalidFile'));
-                    return;
-                }
-                data = parsed;
-                if (!data.settings) data.settings = JSON.parse(JSON.stringify(DEFAULT_DATA.settings));
-                const def = DEFAULT_DATA.settings;
-                for (const k in def) if (data.settings[k] === undefined) data.settings[k] = def[k];
-                data.pages.forEach(p => (p.widgets || []).forEach(w => {
-                    if (!w.view) w.view = 'list';
-                }));
-                activePageIndex = 0;
-                applyTheme();
-                saveData();
-                renderAll();
-                updateClock();
-                toast(t('settings.imported'));
+                applyImportedData(JSON.parse(ev.target.result));
             } catch (err) {
                 toast(t('settings.parseError'));
             }
@@ -2373,6 +2428,84 @@ function bindSettings() {
         updateClock();
         toast(t('settings.resetDone'));
     });
+}
+
+/** 套用匯入嘅數據（驗證 + 正規化 + 渲染） */
+function applyImportedData(parsed) {
+    if (!parsed || !parsed.pages || !Array.isArray(parsed.pages) || parsed.pages.length === 0) {
+        toast(t('settings.invalidFile'));
+        return false;
+    }
+    if (!confirm(t('settings.confirmReplace'))) return false;
+    data = parsed;
+    if (!data.settings) data.settings = JSON.parse(JSON.stringify(DEFAULT_DATA.settings));
+    const def = DEFAULT_DATA.settings;
+    for (const k in def) if (data.settings[k] === undefined) data.settings[k] = def[k];
+    data.pages.forEach(p => (p.widgets || []).forEach(w => {
+        if (!w.view) w.view = 'list';
+    }));
+    activePageIndex = 0;
+    applyTheme();
+    saveData();
+    renderAll();
+    updateClock();
+    toast(t('settings.imported'));
+    return true;
+}
+
+/** 驗證並套用貼上嘅數據 */
+function tryApplyPasted(text) {
+    let parsed;
+    try {
+        parsed = JSON.parse(text);
+    } catch (e) {
+        toast(t('settings.parseError'));
+        return;
+    }
+    applyImportedData(parsed);
+}
+
+/** 通用文字輸入 modal（clipboard 失敗時嘅手動 copy/paste 後備） */
+function showTextModal(title, initialValue, onSave, readOnly) {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+
+    content.innerHTML = `
+        <h3>${escapeHtml(title)}</h3>
+        <div class="form-group">
+            <textarea id="modalTextArea" rows="10" style="width:100%; resize:vertical;"
+                ${readOnly ? 'readonly' : ''} placeholder="${escapeHtml(t('settings.pastePlaceholder'))}">${escapeHtml(initialValue)}</textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" id="modalCancel">${escapeHtml(t('link.cancel'))}</button>
+            ${readOnly ? '' : `<button class="btn btn-primary" id="modalSave">${escapeHtml(t('settings.pasteApply'))}</button>`}
+        </div>
+    `;
+    overlay.classList.add('open');
+
+    const close = () => {
+        overlay.classList.remove('open');
+        overlay.removeEventListener('click', onOverlayClick);
+        content.removeEventListener('keydown', onKeydown);
+    };
+    const onOverlayClick = (e) => { if (e.target === overlay) close(); };
+    const onKeydown = (e) => { if (e.key === 'Escape') close(); };
+
+    document.getElementById('modalCancel').addEventListener('click', close);
+    overlay.addEventListener('click', onOverlayClick);
+    content.addEventListener('keydown', onKeydown);
+
+    if (readOnly) {
+        const ta = document.getElementById('modalTextArea');
+        setTimeout(() => { ta.focus(); ta.select(); }, 50);
+    } else {
+        document.getElementById('modalSave').addEventListener('click', () => {
+            const v = document.getElementById('modalTextArea').value;
+            close();
+            if (v && v.trim() && onSave) onSave(v);
+        });
+        setTimeout(() => document.getElementById('modalTextArea')?.focus(), 50);
+    }
 }
 
 /* ============================================================
