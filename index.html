@@ -812,6 +812,31 @@
         }
         .scan-status { font-size: 0.8rem; color: var(--text-muted); min-height: 1.2em; }
 
+        /* ===== Code Transfer（五位數字） ===== */
+        .code-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+        .code-digits { display: flex; gap: 10px; justify-content: center; margin: 8px 0 2px; flex-wrap: wrap; }
+        .code-digit {
+            font-size: 2.1rem; font-weight: 700; font-variant-numeric: tabular-nums;
+            background: var(--pop-bg, #2a2a45); color: var(--text);
+            border: 1px solid var(--border); border-radius: 12px;
+            min-width: 52px; height: 66px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .code-digits.done .code-digit { border-color: var(--accent); color: var(--accent); }
+        .code-input {
+            font-size: 1.9rem; font-weight: 700; letter-spacing: 12px; text-indent: 12px;
+            text-align: center; width: 100%; max-width: 300px;
+            padding: 12px 10px; border-radius: 12px;
+            border: 1px solid var(--border); background: var(--pop-bg, #2a2a45); color: var(--text);
+            font-family: var(--font);
+        }
+        .code-input::placeholder { color: var(--text-muted); }
+        .code-status { font-size: 0.85rem; color: var(--text-muted); min-height: 1.2em; text-align: center; line-height: 1.5; }
+        .code-status.ok { color: var(--accent); font-weight: 600; }
+        .code-expiry { font-size: 0.72rem; color: var(--text-muted); text-align: center; }
+        .code-summary { font-size: 0.88rem; line-height: 1.7; }
+        .qr-controls { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+
         .settings-section-title {
             flex-basis: 100%;
             font-size: 0.7rem;
@@ -933,8 +958,9 @@
         <button class="btn" id="copyDataBtn" data-i18n="settings.copyData">📋 Copy data</button>
         <button class="btn" id="pasteDataBtn" data-i18n="settings.pasteData">📋 Paste data</button>
         <button class="btn btn-primary" id="sendQrBtn" data-i18n="xfer.send">📱 Send to phone</button>
+        <button class="btn" id="receiveCodeBtn" data-i18n="settings.receiveCode">🔢 Receive with code</button>
         <button class="btn btn-danger" id="clearAllBtn" data-i18n="settings.clearAll">🗑 Clear all data</button>
-        <div class="settings-hint" data-i18n="settings.localHint">Data is stored in this browser only. Easiest way to move it to another device: “Send to phone” (scan the QR codes). You can also Copy / Paste, or Export / Import a file.</div>
+        <div class="settings-hint" data-i18n="settings.localHint">Data is stored in this browser only. Easiest way to move it to another device: “Send to phone” → type the 5-digit code on the phone. QR scan, Copy / Paste and Export / Import also work.</div>
     </div>
 </div>
 
@@ -1128,7 +1154,7 @@ const I18N = {
         'settings.confirmReset': 'Clear ALL data and reset to defaults? This cannot be undone.',
         'settings.copyData': '📋 Copy data',
         'settings.pasteData': '📋 Paste data',
-        'settings.localHint': 'Data is stored in this browser only. To use the same bookmarks on another device (e.g. phone), use Copy data here and Paste data there — or Export / Import a file.',
+        'settings.localHint': 'Data is stored in this browser only. Easiest way to move it to another device: “Send to phone” → type the 5-digit code on the phone. QR scan, Copy / Paste and Export / Import also work.',
         'settings.copied': '✅ Data copied to clipboard',
         'settings.copyTitle': 'Copy data',
         'settings.pasteTitle': 'Paste data',
@@ -1157,6 +1183,27 @@ const I18N = {
         'xfer.cameraError': '⚠️ Cannot access camera',
         'xfer.noDecoder': '⚠️ This browser cannot scan QR codes — use the camera app instead',
         'xfer.parseError': '⚠️ Transfer data corrupted',
+        'xfer.codeTitle': 'Your 5-digit code',
+        'xfer.codeGenerating': 'Creating your code…',
+        'xfer.codeHint': 'On your phone: open this page → ⚙️ Settings → “🔢 Receive with code” → type the 5 digits.',
+        'xfer.codeExpiry': 'Valid for 24 hours · single use',
+        'xfer.codeWaiting': 'Waiting for your phone to pick it up…',
+        'xfer.codeReceived': '✅ Received on your phone — you can close this',
+        'xfer.codeCloudFail': '⚠️ Transfer service unreachable — use QR code or Copy/Paste instead',
+        'xfer.codeGenFail': '⚠️ Could not create a code — please try again',
+        'xfer.receiveCodeTitle': 'Receive with code',
+        'xfer.receiveCodeHint': 'Type the 5-digit code shown on the other device.',
+        'xfer.receiveBtn': 'Receive',
+        'xfer.codeLength': '⚠️ Please enter all 5 digits',
+        'xfer.codeNotFound': '⚠️ Code not found or expired',
+        'xfer.codeSummary': 'Found {pages} page(s) · {widgets} widget(s) · {links} link(s). Replace all data on this device?',
+        'xfer.codeConfirm': 'Replace',
+        'xfer.qrPlay': '▶ Auto-play',
+        'xfer.qrPause': '⏸ Pause',
+        'xfer.qrPausedHint': 'Paused. Scan this frame, then tap ▶ for the next one — or switch on auto-play.',
+        'xfer.useCode': '🔢 Use 5-digit code instead',
+        'xfer.methodQrShort': '📷 Scan QR instead',
+        'settings.receiveCode': '🔢 Receive with code',
         'theme.dark': 'Dark',
         'theme.light': 'Light',
         'theme.ocean': 'Ocean',
@@ -1230,7 +1277,7 @@ const I18N = {
         'settings.confirmReset': '確定要清除所有資料並還原預設值嗎？此動作無法復原。',
         'settings.copyData': '📋 複製數據',
         'settings.pasteData': '📋 貼上數據',
-        'settings.localHint': '數據只存喺依部瀏覽器。想換裝置（例如手機）用同一批書籤：喺依部按「複製數據」，再去第二部裝置按「貼上數據」；或者用匯出／匯入檔案。',
+        'settings.localHint': '數據只存喺依部瀏覽器。想轉去另一部裝置（例如手機）：喺依部按「傳送去手機」→ 拎住個 5 位數字，再去手機按「輸入 code 接收」搞掂。QR 掃碼、複製／貼上、匯出／匯入檔案亦都用到。',
         'settings.copied': '✅ 已複製到剪貼簿',
         'settings.copyTitle': '複製數據',
         'settings.pasteTitle': '貼上數據',
@@ -1259,6 +1306,27 @@ const I18N = {
         'xfer.cameraError': '⚠️ 無法開啓相機',
         'xfer.noDecoder': '⚠️ 呢部瀏覽器冇法掃碼 — 請直接用相機 App 掃描',
         'xfer.parseError': '⚠️ 傳送數據已損壞',
+        'xfer.codeTitle': '你嘅五位數字',
+        'xfer.codeGenerating': '正在產生 code…',
+        'xfer.codeHint': '手機：開啓本頁 → ⚙️ 設定 → 「🔢 輸入 code 接收」→ 輸入呢 5 個數字。',
+        'xfer.codeExpiry': '24 小時內有效 · 僅限一次',
+        'xfer.codeWaiting': '等待手機領取…',
+        'xfer.codeReceived': '✅ 手機已接收 — 可以收埋呢個畫面',
+        'xfer.codeCloudFail': '⚠️ 傳送服務連接唔到 — 請改用 QR 碼 ／ 複製貼上',
+        'xfer.codeGenFail': '⚠️ 產生 code 失敗 — 請再試',
+        'xfer.receiveCodeTitle': '輸入 code 接收',
+        'xfer.receiveCodeHint': '輸入另一部裝置顯示嘅 5 位數字。',
+        'xfer.receiveBtn': '接收',
+        'xfer.codeLength': '⚠️ 請輸入完整 5 個數字',
+        'xfer.codeNotFound': '⚠️ 搵唔到呢個 code 或已過期',
+        'xfer.codeSummary': '搵到 {pages} 頁 · {widgets} 個小工具 · {links} 個書籤。要取代本機所有數據嗎？',
+        'xfer.codeConfirm': '取代',
+        'xfer.qrPlay': '▶ 自動播放',
+        'xfer.qrPause': '⏸ 暫停',
+        'xfer.qrPausedHint': '已暫停。掃描呢幀後按 ▶ 切換下一幀 — 或者開啓自動播放。',
+        'xfer.useCode': '🔢 改用五位數字',
+        'xfer.methodQrShort': '📷 改用 QR 掃碼',
+        'settings.receiveCode': '🔢 輸入 code 接收',
         'theme.dark': '深色',
         'theme.light': '淺色',
         'theme.ocean': '海洋',
@@ -1332,7 +1400,7 @@ const I18N = {
         'settings.confirmReset': '确定要清除所有数据并还原默认值吗？此操作无法撤销。',
         'settings.copyData': '📋 复制数据',
         'settings.pasteData': '📋 粘贴数据',
-        'settings.localHint': '数据只存在本浏览器中。想在其它设备（如手机）用同一批书签：在本设备点「复制数据」，再到另一设备点「粘贴数据」；或用导出／导入文件。',
+        'settings.localHint': '数据只存在本浏览器中。想转到另一台设备（如手机）：在本设备点「传送到手机」→ 记住那个 5 位数字，再去手机点「输入 code 接收」即可。QR 扫码、复制／粘贴、导出／导入文件也都能用。',
         'settings.copied': '✅ 已复制到剪贴板',
         'settings.copyTitle': '复制数据',
         'settings.pasteTitle': '粘贴数据',
@@ -1361,6 +1429,27 @@ const I18N = {
         'xfer.cameraError': '⚠️ 无法打开相机',
         'xfer.noDecoder': '⚠️ 本浏览器无法扫码 — 请直接用相机 App 扫描',
         'xfer.parseError': '⚠️ 传送数据已损坏',
+        'xfer.codeTitle': '你的五位数字',
+        'xfer.codeGenerating': '正在生成 code…',
+        'xfer.codeHint': '手机：打开本页 → ⚙️ 设置 → 「🔢 输入 code 接收」→ 输入这 5 个数字。',
+        'xfer.codeExpiry': '24 小时内有效 · 仅限一次',
+        'xfer.codeWaiting': '等待手机领取…',
+        'xfer.codeReceived': '✅ 手机已接收 — 可以关闭本画面',
+        'xfer.codeCloudFail': '⚠️ 传送服务连不上 — 请改用 QR 码 ／ 复制粘贴',
+        'xfer.codeGenFail': '⚠️ 生成 code 失败 — 请再试',
+        'xfer.receiveCodeTitle': '输入 code 接收',
+        'xfer.receiveCodeHint': '输入另一台设备显示的 5 位数字。',
+        'xfer.receiveBtn': '接收',
+        'xfer.codeLength': '⚠️ 请输入完整 5 个数字',
+        'xfer.codeNotFound': '⚠️ 找不到该 code 或已过期',
+        'xfer.codeSummary': '找到 {pages} 页 · {widgets} 个小工具 · {links} 个书签。要取代本机所有数据吗？',
+        'xfer.codeConfirm': '取代',
+        'xfer.qrPlay': '▶ 自动播放',
+        'xfer.qrPause': '⏸ 暂停',
+        'xfer.qrPausedHint': '已暂停。扫描这一帧后按 ▶ 切换下一帧 — 或者打开自动播放。',
+        'xfer.useCode': '🔢 改用五位数字',
+        'xfer.methodQrShort': '📷 改用 QR 扫码',
+        'settings.receiveCode': '🔢 输入 code 接收',
         'theme.dark': '深色',
         'theme.light': '浅色',
         'theme.ocean': '海洋',
@@ -2566,13 +2655,8 @@ function bindSettings() {
     });
 }
 
-/** 套用匯入嘅數據（驗證 + 正規化 + 渲染） */
-function applyImportedData(parsed) {
-    if (!parsed || !parsed.pages || !Array.isArray(parsed.pages) || parsed.pages.length === 0) {
-        toast(t('settings.invalidFile'));
-        return false;
-    }
-    if (!confirm(t('settings.confirmReplace'))) return false;
+/** 正規化 + 渲染匯入嘅數據（冇 confirm；成功回傳 true） */
+function applyImportedDataCore(parsed) {
     data = parsed;
     if (!data.settings) data.settings = JSON.parse(JSON.stringify(DEFAULT_DATA.settings));
     const def = DEFAULT_DATA.settings;
@@ -2587,6 +2671,16 @@ function applyImportedData(parsed) {
     updateClock();
     toast(t('settings.imported'));
     return true;
+}
+
+/** 套用匯入嘅數據（驗證 + 確認 + 正規化 + 渲染） */
+function applyImportedData(parsed) {
+    if (!parsed || !parsed.pages || !Array.isArray(parsed.pages) || parsed.pages.length === 0) {
+        toast(t('settings.invalidFile'));
+        return false;
+    }
+    if (!confirm(t('settings.confirmReplace'))) return false;
+    return applyImportedDataCore(parsed);
 }
 
 /** 驗證並套用貼上嘅數據 */
@@ -2813,10 +2907,17 @@ async function openSendQrModal() {
             <div class="qr-box" id="qrBox"></div>
             <div class="qr-frame-badge" id="qrBadge"></div>
             <div class="qr-meta">${escapeHtml(t('xfer.size', { kb, total: frames.length }))}</div>
-            <div class="qr-hint">${escapeHtml(frames.length === 1 ? t('xfer.hintSingle') : t('xfer.hintMulti'))}</div>
+            <div class="qr-hint" id="qrHint">${escapeHtml(frames.length === 1 ? t('xfer.hintSingle') : t('xfer.qrPausedHint'))}</div>
+            ${frames.length > 1 ? `
+            <div class="qr-controls" id="qrControls">
+                <button class="btn btn-icon" id="qrPrevBtn" aria-label="prev">◀</button>
+                <button class="btn" id="qrPlayBtn">${escapeHtml(t('xfer.qrPlay'))}</button>
+                <button class="btn btn-icon" id="qrNextBtn" aria-label="next">▶</button>
+            </div>` : ''}
         </div>
         <div class="modal-actions">
             <button class="btn" id="qrCloseBtn">${escapeHtml(t('link.cancel'))}</button>
+            <button class="btn" id="qrCodeBtn">${escapeHtml(t('xfer.useCode'))}</button>
         </div>
     `;
     overlay.classList.add('open');
@@ -2831,6 +2932,7 @@ async function openSendQrModal() {
     const onOverlayClick = (e) => { if (e.target === overlay) close(); };
     const onKeydown = (e) => { if (e.key === 'Escape') close(); };
     document.getElementById('qrCloseBtn').addEventListener('click', close);
+    document.getElementById('qrCodeBtn').addEventListener('click', () => { close(); openSendCodeModal(); });
     overlay.addEventListener('click', onOverlayClick);
     content.addEventListener('keydown', onKeydown);
 
@@ -2849,7 +2951,7 @@ async function openSendQrModal() {
     }
     if (!alive) return;
 
-    let cur = 0;
+    let cur = 0, playing = false;
     const showFrame = (i) => {
         if (!alive) return;
         cur = (i + frames.length) % frames.length;
@@ -2864,9 +2966,32 @@ async function openSendQrModal() {
         document.getElementById('qrBadge').textContent =
             frames.length === 1 ? '' : t('xfer.frame', { n: f.idx, total: f.total });
     };
+    const stopCycle = () => {
+        if (qrCycleTimer) { clearInterval(qrCycleTimer); qrCycleTimer = null; }
+    };
+    const setPlaying = (p) => {
+        playing = p;
+        stopCycle();
+        const btn = document.getElementById('qrPlayBtn');
+        if (btn) btn.textContent = p ? t('xfer.qrPause') : t('xfer.qrPlay');
+        const hint = document.getElementById('qrHint');
+        if (hint) hint.textContent = frames.length === 1 ? t('xfer.hintSingle')
+            : (p ? t('xfer.hintMulti') : t('xfer.qrPausedHint'));
+        if (p) qrCycleTimer = setInterval(() => showFrame(cur + 1), 3000);
+    };
     showFrame(0);
     if (frames.length > 1) {
-        qrCycleTimer = setInterval(() => showFrame(cur + 1), 2400);
+        /* 預設暫停停喺首幀 — 解決「QR 不斷跳、手機掃唔到」 */
+        document.getElementById('qrPrevBtn').addEventListener('click', () => {
+            if (playing) setPlaying(false);
+            showFrame(cur - 1);
+        });
+        document.getElementById('qrNextBtn').addEventListener('click', () => {
+            if (playing) setPlaying(false);
+            showFrame(cur + 1);
+        });
+        document.getElementById('qrPlayBtn').addEventListener('click', () => setPlaying(!playing));
+        setPlaying(false);
     }
 }
 
@@ -2957,7 +3082,12 @@ async function handleXferHash() {
 }
 /* ---------- 接收端 UI ---------- */
 function bindXferUI() {
-    document.getElementById('sendQrBtn').addEventListener('click', openSendQrModal);
+    /* 主路徑：直接出五位數字 code；QR 係 modal 內嘅後備 */
+    document.getElementById('sendQrBtn').addEventListener('click', openSendCodeModal);
+    document.getElementById('receiveCodeBtn').addEventListener('click', () => {
+        codePurgeExpired();   /* best-effort 清過期碼 */
+        openReceiveCodeModal();
+    });
 
     document.getElementById('xferRestartBtn').addEventListener('click', () => {
         xferClearBuf();
@@ -3100,6 +3230,315 @@ async function openScannerModal() {
             }
         } catch (e) { /* keep scanning */ }
     }, 300);
+}
+
+/* ============================================================
+   19c. CODE TRANSFER（雲端五位數字：PC 產生 → 手機輸入領取）
+   數據路：JSON → deflate-raw → base64url → 雲端表 startpage_codes
+   ============================================================ */
+const CLOUD_SDK_URL = 'https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js';
+const CLOUD_CFG = {
+    endpoint: 'https://startpage-00353.app.workbuddy.host',
+    oauthRelayBaseUrl: 'https://www.workbuddy.cn/v2/as/genie-baas/oauth',
+    publishableKey: 'wbpk_c9Bz324kWYXgbQi1xIJR3s_zfNj8CQXe10Fw27hnYRJCuJbSMkLf45d'
+};
+const XFER_CODE_TTL = 24 * 60 * 60 * 1000;   /* code 有效期 24 小時 */
+const XFER_CODE_POLL = 5000;                 /* PC 端輪詢間隔 */
+
+let cloudClient = null;
+let cloudClientPromise = null;
+
+/** lazy-init 雲端 client（SDK 用先至載） */
+function getCloud() {
+    if (cloudClient) return Promise.resolve(cloudClient);
+    if (cloudClientPromise) return cloudClientPromise;
+    cloudClientPromise = (async () => {
+        if (typeof window.WorkBuddyCloud === 'undefined') {
+            await loadScript(CLOUD_SDK_URL);
+        }
+        if (typeof window.WorkBuddyCloud === 'undefined' || !window.WorkBuddyCloud.createWorkBuddyCloud) {
+            throw new Error('cloud sdk unavailable');
+        }
+        cloudClient = window.WorkBuddyCloud.createWorkBuddyCloud({
+            endpoint: CLOUD_CFG.endpoint,
+            oauthRelayBaseUrl: CLOUD_CFG.oauthRelayBaseUrl,
+            publishableKey: CLOUD_CFG.publishableKey
+        });
+        return cloudClient;
+    })();
+    cloudClientPromise.catch(() => { cloudClientPromise = null; });
+    return cloudClientPromise;
+}
+
+function randomCode() {
+    return String(10000 + Math.floor(Math.random() * 90000));   /* 10000–99999 */
+}
+
+/** 上傳 payload → 五位數字 code（撞號 23505 會重試） */
+async function codeUpload(payload) {
+    const cloud = await getCloud();
+    let lastErr = null;
+    for (let i = 0; i < 6; i++) {
+        const code = randomCode();
+        const { error } = await cloud.database.from('startpage_codes').insert({ code, payload });
+        if (!error) return code;
+        lastErr = error;
+        if (error.code === '23505') continue;
+        throw error;
+    }
+    throw lastErr || new Error('code gen failed');
+}
+
+/** 按 code 查 payload；搵唔到 → null */
+async function codeLookup(code) {
+    const cloud = await getCloud();
+    const { data, error } = await cloud.database
+        .from('startpage_codes')
+        .select('payload, created_at')
+        .eq('code', code)
+        .maybeSingle();
+    if (error) throw error;
+    return data || null;
+}
+
+async function codeRemove(code) {
+    try {
+        const cloud = await getCloud();
+        await cloud.database.from('startpage_codes').delete().eq('code', code);
+    } catch (e) { /* best-effort */ }
+}
+
+/** 順手清走過期碼（best-effort，唔阻塞 UI） */
+function codePurgeExpired() {
+    getCloud().then(cloud =>
+        cloud.database.from('startpage_codes')
+            .delete()
+            .lt('created_at', new Date(Date.now() - XFER_CODE_TTL).toISOString())
+    ).catch(() => { /* ignore */ });
+}
+
+function codeIsFresh(row) {
+    const ts = Date.parse(row && row.created_at);
+    return Number.isFinite(ts) && (Date.now() - ts) < XFER_CODE_TTL;
+}
+
+function countData(d) {
+    let widgets = 0, links = 0;
+    (d.pages || []).forEach(p => (p.widgets || []).forEach(w => {
+        widgets++;
+        links += (w.links || []).length;
+    }));
+    return { pages: (d.pages || []).length, widgets, links };
+}
+
+/* ---------- 發送端（PC）：產生五位數字 ---------- */
+let codePollTimer = null;
+function stopCodePoll() {
+    if (codePollTimer) { clearInterval(codePollTimer); codePollTimer = null; }
+}
+
+async function openSendCodeModal() {
+    if (!xferCanCompress) { toast(t('xfer.compressFail')); return; }
+
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.innerHTML = `
+        <h3>${escapeHtml(t('xfer.codeTitle'))}</h3>
+        <div class="code-wrap">
+            <div class="code-status" id="codeStatus">${escapeHtml(t('xfer.codeGenerating'))}</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" id="codeCloseBtn">${escapeHtml(t('link.cancel'))}</button>
+        </div>
+    `;
+    overlay.classList.add('open');
+
+    let alive = true;
+    const close = () => {
+        alive = false;
+        stopCodePoll();
+        overlay.classList.remove('open');
+        overlay.removeEventListener('click', onOverlayClick);
+        content.removeEventListener('keydown', onKeydown);
+    };
+    const onOverlayClick = (e) => { if (e.target === overlay) close(); };
+    const onKeydown = (e) => { if (e.key === 'Escape') close(); };
+    document.getElementById('codeCloseBtn').addEventListener('click', close);
+    overlay.addEventListener('click', onOverlayClick);
+    content.addEventListener('keydown', onKeydown);
+
+    const fail = (msgKey) => {
+        if (!alive) return;
+        content.innerHTML = `
+            <h3>${escapeHtml(t('xfer.codeTitle'))}</h3>
+            <div class="code-wrap">
+                <div class="code-status">${escapeHtml(t(msgKey))}</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="codeCloseBtn2">${escapeHtml(t('link.cancel'))}</button>
+                <button class="btn" id="codeQrFallbackBtn">${escapeHtml(t('xfer.methodQrShort'))}</button>
+            </div>
+        `;
+        document.getElementById('codeCloseBtn2').addEventListener('click', close);
+        document.getElementById('codeQrFallbackBtn').addEventListener('click', () => { close(); openSendQrModal(); });
+    };
+
+    let payload;
+    try {
+        payload = await xferBuildPayload();
+        if (!payload) throw new Error('compress unsupported');
+    } catch (e) {
+        fail('xfer.compressFail');
+        return;
+    }
+    if (!alive) return;
+
+    let code;
+    try {
+        code = await codeUpload(payload);
+    } catch (e) {
+        fail('xfer.codeCloudFail');
+        return;
+    }
+    if (!alive) { codeRemove(code); return; }
+
+    const digits = code.split('').map(d => `<span class="code-digit">${escapeHtml(d)}</span>`).join('');
+    content.innerHTML = `
+        <h3>${escapeHtml(t('xfer.codeTitle'))}</h3>
+        <div class="code-wrap">
+            <div class="code-digits" id="codeDigits">${digits}</div>
+            <p class="code-expiry">${escapeHtml(t('xfer.codeExpiry'))}</p>
+            <p class="qr-hint">${escapeHtml(t('xfer.codeHint'))}</p>
+            <div class="code-status" id="codeStatus">${escapeHtml(t('xfer.codeWaiting'))}</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" id="codeCloseBtn3">${escapeHtml(t('link.cancel'))}</button>
+            <button class="btn" id="codeQrBtn">${escapeHtml(t('xfer.methodQrShort'))}</button>
+        </div>
+    `;
+    document.getElementById('codeCloseBtn3').addEventListener('click', close);
+    document.getElementById('codeQrBtn').addEventListener('click', () => { close(); openSendQrModal(); });
+
+    /* 輪詢：手機領取後會刪碼 → 刪咗即顯示成功 */
+    const poll = async () => {
+        if (!alive) return;
+        try {
+            const row = await codeLookup(code);
+            if (!alive) return;
+            if (!row) {
+                stopCodePoll();
+                const st = document.getElementById('codeStatus');
+                if (st) { st.textContent = t('xfer.codeReceived'); st.classList.add('ok'); }
+                const cd = document.getElementById('codeDigits');
+                if (cd) cd.classList.add('done');
+            }
+        } catch (e) { /* keep waiting */ }
+    };
+    codePollTimer = setInterval(poll, XFER_CODE_POLL);
+}
+
+/* ---------- 接收端（手機）：輸入五位數字 ---------- */
+async function openReceiveCodeModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.innerHTML = `
+        <h3>${escapeHtml(t('xfer.receiveCodeTitle'))}</h3>
+        <div class="code-wrap">
+            <input class="code-input" id="codeInput" type="text" inputmode="numeric"
+                   autocomplete="off" maxlength="5" placeholder="12345" aria-label="code">
+            <p class="qr-hint">${escapeHtml(t('xfer.receiveCodeHint'))}</p>
+            <div class="code-status" id="codeStatus"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" id="codeCancelBtn">${escapeHtml(t('link.cancel'))}</button>
+            <button class="btn btn-primary" id="codeFetchBtn">${escapeHtml(t('xfer.receiveBtn'))}</button>
+        </div>
+    `;
+    overlay.classList.add('open');
+
+    let alive = true;
+    const close = () => {
+        alive = false;
+        overlay.classList.remove('open');
+        overlay.removeEventListener('click', onOverlayClick);
+        content.removeEventListener('keydown', onKeydown);
+    };
+    const onOverlayClick = (e) => { if (e.target === overlay) close(); };
+    const onKeydown = (e) => {
+        if (e.key === 'Escape') close();
+        else if (e.key === 'Enter') submit();
+    };
+    document.getElementById('codeCancelBtn').addEventListener('click', close);
+    overlay.addEventListener('click', onOverlayClick);
+    content.addEventListener('keydown', onKeydown);
+    setTimeout(() => document.getElementById('codeInput')?.focus(), 50);
+
+    const submit = async () => {
+        const input = document.getElementById('codeInput');
+        const status = document.getElementById('codeStatus');
+        if (!input || !alive) return;
+        const code = (input.value || '').replace(/\D/g, '');
+        if (code.length !== 5) {
+            if (status) status.textContent = t('xfer.codeLength');
+            return;
+        }
+        if (status) status.textContent = t('xfer.loading');
+        let row;
+        try {
+            row = await codeLookup(code);
+        } catch (e) {
+            if (alive && status) status.textContent = t('xfer.codeCloudFail');
+            return;
+        }
+        if (!alive) return;
+        if (!row || !codeIsFresh(row)) {
+            if (status) status.textContent = t('xfer.codeNotFound');
+            return;
+        }
+        let parsed;
+        try {
+            parsed = JSON.parse(await xferDecompress(b64urlDecode(row.payload)));
+        } catch (e) {
+            if (status) status.textContent = t('xfer.parseError');
+            return;
+        }
+        if (!alive) return;
+        if (!parsed || !parsed.pages || !Array.isArray(parsed.pages) || !parsed.pages.length) {
+            if (status) status.textContent = t('settings.invalidFile');
+            return;
+        }
+        showCodeSummary(content, close, code, parsed);
+    };
+    document.getElementById('codeFetchBtn').addEventListener('click', submit);
+}
+
+/** 摘要 → 自訂確認 → 套用 → 刪碼 */
+function showCodeSummary(content, closePrev, code, parsed) {
+    const stats = countData(parsed);
+    content.innerHTML = `
+        <h3>${escapeHtml(t('xfer.receiveCodeTitle'))}</h3>
+        <div class="code-wrap">
+            <p class="code-summary">${escapeHtml(t('xfer.codeSummary', stats))}</p>
+            <div class="code-status" id="codeStatus2"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" id="codeCancelBtn2">${escapeHtml(t('link.cancel'))}</button>
+            <button class="btn btn-primary" id="codeApplyBtn">${escapeHtml(t('xfer.codeConfirm'))}</button>
+        </div>
+    `;
+    document.getElementById('codeCancelBtn2').addEventListener('click', closePrev);
+    document.getElementById('codeApplyBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('codeApplyBtn');
+        if (btn) { btn.disabled = true; btn.textContent = t('xfer.loading'); }
+        const ok = applyImportedDataCore(parsed);
+        if (ok) {
+            await codeRemove(code);   /* 刪碼 → PC 端輪詢會顯示「已接收」 */
+            closePrev();
+        } else if (btn) {
+            btn.disabled = false;
+            btn.textContent = t('xfer.codeConfirm');
+        }
+    });
 }
 
 /* ============================================================
