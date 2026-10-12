@@ -757,6 +757,61 @@
             margin-top: 2px;
         }
 
+        /* ===== QR Transfer ===== */
+        .qr-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .qr-box {
+            background: #fff; padding: 10px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 200px; min-width: 200px;
+        }
+        .qr-box img, .qr-box canvas { display: block; max-width: 100%; }
+        .qr-frame-badge {
+            font-size: 0.8rem; font-weight: 600; color: var(--accent);
+            font-variant-numeric: tabular-nums;
+        }
+        .qr-meta { font-size: 0.72rem; color: var(--text-muted); }
+        .qr-hint { font-size: 0.75rem; color: var(--text-muted); line-height: 1.6; text-align: center; }
+
+        .xfer-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0, 0, 0, 0.72);
+            display: none; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .xfer-overlay.open { display: flex; }
+        .xfer-card {
+            background: var(--surface, #1e1e32); color: var(--text);
+            border: 1px solid var(--border); border-radius: 14px;
+            padding: 24px; max-width: 420px; width: 100%;
+            display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+        .xfer-card h3 { font-size: 1rem; }
+        .xfer-progress {
+            height: 8px; border-radius: 4px; overflow: hidden;
+            background: var(--bg-tertiary, #333);
+        }
+        .xfer-progress-bar {
+            height: 100%; width: 0%;
+            background: var(--accent); transition: width 0.25s;
+        }
+        .xfer-status { font-size: 0.9rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .xfer-hint { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
+        .xfer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .scan-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .scan-video-box {
+            position: relative; width: 100%; max-width: 340px; aspect-ratio: 1;
+            background: #000; border-radius: 10px; overflow: hidden;
+        }
+        .scan-video-box video { width: 100%; height: 100%; object-fit: cover; }
+        .scan-reticle {
+            position: absolute; inset: 12%;
+            border: 2px solid var(--accent); border-radius: 12px;
+            box-shadow: 0 0 0 999px rgba(0,0,0,0.25);
+        }
+        .scan-status { font-size: 0.8rem; color: var(--text-muted); min-height: 1.2em; }
+
         .settings-section-title {
             flex-basis: 100%;
             font-size: 0.7rem;
@@ -877,8 +932,9 @@
         <input type="file" id="importFileInput" accept=".json" style="display:none">
         <button class="btn" id="copyDataBtn" data-i18n="settings.copyData">📋 Copy data</button>
         <button class="btn" id="pasteDataBtn" data-i18n="settings.pasteData">📋 Paste data</button>
+        <button class="btn btn-primary" id="sendQrBtn" data-i18n="xfer.send">📱 Send to phone</button>
         <button class="btn btn-danger" id="clearAllBtn" data-i18n="settings.clearAll">🗑 Clear all data</button>
-        <div class="settings-hint" data-i18n="settings.localHint">Data is stored in this browser only. To use the same bookmarks on another device (e.g. phone), use Copy data here and Paste data there — or Export / Import a file.</div>
+        <div class="settings-hint" data-i18n="settings.localHint">Data is stored in this browser only. Easiest way to move it to another device: “Send to phone” (scan the QR codes). You can also Copy / Paste, or Export / Import a file.</div>
     </div>
 </div>
 
@@ -893,6 +949,20 @@
 <!-- ===== Modal ===== -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- ===== QR Transfer Receive Overlay ===== -->
+<div class="xfer-overlay" id="xferOverlay">
+    <div class="xfer-card">
+        <h3 data-i18n="xfer.receiving">📱 Receiving data…</h3>
+        <div class="xfer-progress"><div class="xfer-progress-bar" id="xferBar" style="width:0%"></div></div>
+        <p class="xfer-status" id="xferStatus"></p>
+        <p class="xfer-hint" data-i18n="xfer.receiveHint">Point your phone camera at the QR codes on the other screen — this page collects them automatically.</p>
+        <div class="xfer-actions">
+            <button class="btn btn-primary" id="xferScanBtn" data-i18n="xfer.openScanner">📷 Open scanner</button>
+            <button class="btn" id="xferRestartBtn" data-i18n="xfer.startOver">Start over</button>
+        </div>
+    </div>
 </div>
 
 <!-- ===== Toast ===== -->
@@ -1065,6 +1135,28 @@ const I18N = {
         'settings.pastePlaceholder': 'Paste the JSON data copied from the other device here…',
         'settings.pasteApply': 'Apply',
         'settings.confirmReplace': 'Replace all current data with the pasted content?',
+        'xfer.send': '📱 Send to phone',
+        'xfer.title': 'Scan with your phone',
+        'xfer.hintSingle': 'On your phone: open the camera app and scan this code — the data will be imported.',
+        'xfer.hintMulti': 'Keep this screen open. On your phone: open the camera app and scan the codes one by one — this page collects them automatically.',
+        'xfer.frame': 'Frame {n} / {total}',
+        'xfer.size': 'Payload {kb} KB · {total} frame(s)',
+        'xfer.loading': 'Loading…',
+        'xfer.qrLibFail': '⚠️ QR library failed to load',
+        'xfer.compressFail': '⚠️ This browser is too old for QR transfer — use Copy/Paste.',
+        'xfer.needHttp': '⚠️ Open the page via its https link first',
+        'xfer.receiving': '📱 Receiving data…',
+        'xfer.receiveHint': 'Point your phone camera at the QR codes on the other screen — this page collects them automatically.',
+        'xfer.received': 'Received {n} / {total} frames',
+        'xfer.openScanner': '📷 Open scanner',
+        'xfer.startOver': 'Start over',
+        'xfer.restarted': '🔄 Transfer restarted',
+        'xfer.scanTitle': 'Scan QR frames',
+        'xfer.scanHint': 'Point the camera at the QR codes shown on the other screen.',
+        'xfer.scanning': 'Scanning…',
+        'xfer.cameraError': '⚠️ Cannot access camera',
+        'xfer.noDecoder': '⚠️ This browser cannot scan QR codes — use the camera app instead',
+        'xfer.parseError': '⚠️ Transfer data corrupted',
         'theme.dark': 'Dark',
         'theme.light': 'Light',
         'theme.ocean': 'Ocean',
@@ -1145,6 +1237,28 @@ const I18N = {
         'settings.pastePlaceholder': '將另一部裝置複製嘅 JSON 數據貼到這裏…',
         'settings.pasteApply': '套用',
         'settings.confirmReplace': '確定要用貼上嘅內容取代現有數據嗎？',
+        'xfer.send': '📱 傳送去手機',
+        'xfer.title': '用手機掃碼接收',
+        'xfer.hintSingle': '手機：開相機 App 掃描呢個碼，數據就會自動匯入。',
+        'xfer.hintMulti': '保持呢個畫面。手機：開相機 App 逐個掃描，呢頁會自動收集齊全。',
+        'xfer.frame': '第 {n} / {total} 幀',
+        'xfer.size': '數據 {kb} KB · 共 {total} 幀',
+        'xfer.loading': '載入中…',
+        'xfer.qrLibFail': '⚠️ QR 庫載入失敗',
+        'xfer.compressFail': '⚠️ 呢部瀏覽器太舊，唔支援 QR 傳送 — 請用複製／貼上。',
+        'xfer.needHttp': '⚠️ 請先用 https 連結開啓呢頁',
+        'xfer.receiving': '📱 正在接收數據…',
+        'xfer.receiveHint': '將手機相機對住另一部螢幕上嘅 QR 碼 — 本頁會自動收集。',
+        'xfer.received': '已接收 {n} / {total} 幀',
+        'xfer.openScanner': '📷 開啓掃碼器',
+        'xfer.startOver': '重新開始',
+        'xfer.restarted': '🔄 已重新開始傳送',
+        'xfer.scanTitle': '掃描 QR 碼',
+        'xfer.scanHint': '將相機對住另一部螢幕顯示嘅 QR 碼。',
+        'xfer.scanning': '掃描中…',
+        'xfer.cameraError': '⚠️ 無法開啓相機',
+        'xfer.noDecoder': '⚠️ 呢部瀏覽器冇法掃碼 — 請直接用相機 App 掃描',
+        'xfer.parseError': '⚠️ 傳送數據已損壞',
         'theme.dark': '深色',
         'theme.light': '淺色',
         'theme.ocean': '海洋',
@@ -1225,6 +1339,28 @@ const I18N = {
         'settings.pastePlaceholder': '将另一台设备复制的 JSON 数据粘贴到这里…',
         'settings.pasteApply': '应用',
         'settings.confirmReplace': '确定要用粘贴的内容替换现有数据吗？',
+        'xfer.send': '📱 传送到手机',
+        'xfer.title': '用手机扫码接收',
+        'xfer.hintSingle': '手机：打开相机 App 扫描此码，数据就会自动导入。',
+        'xfer.hintMulti': '保持本画面。手机：打开相机 App 逐个扫描，本页会自动收集齐全。',
+        'xfer.frame': '第 {n} / {total} 帧',
+        'xfer.size': '数据 {kb} KB · 共 {total} 帧',
+        'xfer.loading': '加载中…',
+        'xfer.qrLibFail': '⚠️ QR 库加载失败',
+        'xfer.compressFail': '⚠️ 本浏览器太旧，不支持 QR 传送 — 请用复制／粘贴。',
+        'xfer.needHttp': '⚠️ 请先用 https 链接打开本页',
+        'xfer.receiving': '📱 正在接收数据…',
+        'xfer.receiveHint': '将手机相机对着另一台屏幕上的 QR 码 — 本页会自动收集。',
+        'xfer.received': '已接收 {n} / {total} 帧',
+        'xfer.openScanner': '📷 打开扫描器',
+        'xfer.startOver': '重新开始',
+        'xfer.restarted': '🔄 已重新开始传送',
+        'xfer.scanTitle': '扫描 QR 码',
+        'xfer.scanHint': '将相机对着另一台屏幕显示的 QR 码。',
+        'xfer.scanning': '扫描中…',
+        'xfer.cameraError': '⚠️ 无法打开相机',
+        'xfer.noDecoder': '⚠️ 本浏览器无法扫码 — 请直接用相机 App 扫描',
+        'xfer.parseError': '⚠️ 传送数据已损坏',
         'theme.dark': '深色',
         'theme.light': '浅色',
         'theme.ocean': '海洋',
@@ -2580,8 +2716,390 @@ function bindKeyboard() {
         if (e.key === 'Escape') {
             document.getElementById('modalOverlay').classList.remove('open');
             closeColorPop();
+            scanStop();
         }
     });
+}
+
+/* ============================================================
+   19b. QR TRANSFER（跨裝置：PC 顯示 QR → 手機掃碼導入）
+   數據路：JSON → deflate-raw → base64url → 分幀 QR
+   ============================================================ */
+const XFER_BUF_KEY = 'startpage-xfer-buf';
+const XFER_CHUNK = 850;        /* base64url chars per frame（QR ~v23，各類掃碼器都掃到） */
+const XFER_SINGLE_MAX = 1200;  /* ≤ 此長度用單幀（手機相機直開） */
+const XFER_TTL = 2 * 60 * 60 * 1000;
+
+function b64urlEncode(bytes) {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlDecode(s) {
+    s = s.replace(/-/g, '+').replace(/_/g, '/');
+    const bin = atob(s);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+}
+
+const xferCanCompress = (typeof CompressionStream !== 'undefined' && typeof DecompressionStream !== 'undefined');
+
+async function xferCompress(str) {
+    const stream = new Blob([str]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+    const buf = await new Response(stream).arrayBuffer();
+    return new Uint8Array(buf);
+}
+async function xferDecompress(bytes) {
+    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return await new Response(stream).text();
+}
+
+function xferBaseUrl() {
+    return location.origin + location.pathname;
+}
+
+/** 建立傳輸 payload（壓縮 + base64url）；唔支援壓縮 → null */
+async function xferBuildPayload() {
+    if (!xferCanCompress) return null;
+    const bytes = await xferCompress(JSON.stringify(data));
+    return b64urlEncode(bytes);
+}
+
+/** 分幀 → [{ idx, total, chunk }] */
+function xferSplitFrames(payload) {
+    if (payload.length <= XFER_SINGLE_MAX) return [{ idx: 1, total: 1, chunk: payload }];
+    const total = Math.ceil(payload.length / XFER_CHUNK);
+    const frames = [];
+    for (let i = 0; i < total; i++) {
+        frames.push({ idx: i + 1, total, chunk: payload.slice(i * XFER_CHUNK, (i + 1) * XFER_CHUNK) });
+    }
+    return frames;
+}
+
+function xferFrameUrl(f) {
+    if (f.total === 1) return `${xferBaseUrl()}#i=${f.chunk}`;
+    return `${xferBaseUrl()}#q=${f.idx}/${f.total}|${f.chunk}`;
+}
+
+/* ---------- 發送端（PC） ---------- */
+let qrCycleTimer = null;
+
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('script load failed: ' + src));
+        document.head.appendChild(s);
+    });
+}
+
+async function openSendQrModal() {
+    if (!xferCanCompress) { toast(t('xfer.compressFail')); return; }
+    if (location.protocol === 'file:') { toast(t('xfer.needHttp')); return; }
+
+    const payload = await xferBuildPayload();
+    if (!payload) { toast(t('xfer.compressFail')); return; }
+    const frames = xferSplitFrames(payload);
+
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    const qrSize = Math.max(220, Math.min(460, Math.floor(window.innerWidth * 0.5)));
+    const kb = (payload.length * 0.75 / 1024).toFixed(1);
+    content.innerHTML = `
+        <h3>${escapeHtml(t('xfer.title'))}</h3>
+        <div class="qr-wrap">
+            <div class="qr-box" id="qrBox"></div>
+            <div class="qr-frame-badge" id="qrBadge"></div>
+            <div class="qr-meta">${escapeHtml(t('xfer.size', { kb, total: frames.length }))}</div>
+            <div class="qr-hint">${escapeHtml(frames.length === 1 ? t('xfer.hintSingle') : t('xfer.hintMulti'))}</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" id="qrCloseBtn">${escapeHtml(t('link.cancel'))}</button>
+        </div>
+    `;
+    overlay.classList.add('open');
+
+    const close = () => {
+        alive = false;
+        if (qrCycleTimer) { clearInterval(qrCycleTimer); qrCycleTimer = null; }
+        overlay.classList.remove('open');
+        overlay.removeEventListener('click', onOverlayClick);
+        content.removeEventListener('keydown', onKeydown);
+    };
+    const onOverlayClick = (e) => { if (e.target === overlay) close(); };
+    const onKeydown = (e) => { if (e.key === 'Escape') close(); };
+    document.getElementById('qrCloseBtn').addEventListener('click', close);
+    overlay.addEventListener('click', onOverlayClick);
+    content.addEventListener('keydown', onKeydown);
+
+    let alive = true;
+    const box = document.getElementById('qrBox');
+    box.innerHTML = `<span class="qr-meta">${escapeHtml(t('xfer.loading'))}</span>`;
+
+    /* lazy load QR library */
+    try {
+        if (typeof QRCode === 'undefined') {
+            await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
+        }
+    } catch (e) {
+        if (alive) box.innerHTML = `<span class="qr-meta">${escapeHtml(t('xfer.qrLibFail'))}</span>`;
+        return;
+    }
+    if (!alive) return;
+
+    let cur = 0;
+    const showFrame = (i) => {
+        if (!alive) return;
+        cur = (i + frames.length) % frames.length;
+        const f = frames[cur];
+        box.innerHTML = '';
+        new QRCode(box, {
+            text: xferFrameUrl(f),
+            width: qrSize, height: qrSize,
+            colorDark: '#000000', colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.L
+        });
+        document.getElementById('qrBadge').textContent =
+            frames.length === 1 ? '' : t('xfer.frame', { n: f.idx, total: f.total });
+    };
+    showFrame(0);
+    if (frames.length > 1) {
+        qrCycleTimer = setInterval(() => showFrame(cur + 1), 2400);
+    }
+}
+
+/* ---------- 緩衝（手機收集分幀） ---------- */
+function xferLoadBuf() {
+    try {
+        const b = JSON.parse(localStorage.getItem(XFER_BUF_KEY) || 'null');
+        if (b && b.ts && Date.now() - b.ts < XFER_TTL && b.chunks) return b;
+    } catch (e) { /* ignore */ }
+    return null;
+}
+function xferSaveBuf(buf) {
+    buf.ts = Date.now();
+    try { localStorage.setItem(XFER_BUF_KEY, JSON.stringify(buf)); } catch (e) { /* ignore */ }
+}
+function xferClearBuf() { try { localStorage.removeItem(XFER_BUF_KEY); } catch (e) { /* ignore */ } }
+
+function xferBufCount(buf) { return buf ? Object.keys(buf.chunks).length : 0; }
+
+function renderXferOverlay(buf) {
+    const ov = document.getElementById('xferOverlay');
+    const n = xferBufCount(buf), total = buf ? buf.total : 0;
+    document.getElementById('xferBar').style.width = total ? (n / total * 100) + '%' : '0%';
+    document.getElementById('xferStatus').textContent = t('xfer.received', { n, total });
+    ov.classList.add('open');
+}
+
+/** 收一幀；齊料 → 自動套用。返回 'ok' | 'partial' | 'bad' */
+async function xferIngestFrame(idx, total, chunk) {
+    if (!idx || !total || !chunk || idx < 1 || idx > total || total < 1) return 'bad';
+    let buf = xferLoadBuf();
+    if (!buf || buf.total !== total) {
+        buf = { total, chunks: {}, ts: Date.now() };
+    }
+    buf.chunks[String(idx)] = chunk;
+    xferSaveBuf(buf);
+
+    if (Object.keys(buf.chunks).length >= total) {
+        const payload = [];
+        for (let i = 1; i <= total; i++) {
+            if (!buf.chunks[String(i)]) return 'partial';
+            payload.push(buf.chunks[String(i)]);
+        }
+        await xferApplyPayload(payload.join(''));
+        return 'ok';
+    }
+    renderXferOverlay(buf);
+    return 'partial';
+}
+
+/** 解壓 + 驗證 + 套用；成功後清理 */
+async function xferApplyPayload(payload) {
+    try {
+        const json = await xferDecompress(b64urlDecode(payload));
+        const parsed = JSON.parse(json);
+        const ok = applyImportedData(parsed);   /* 內部有 confirm + toast */
+        if (ok) {
+            xferClearBuf();
+            document.getElementById('xferOverlay').classList.remove('open');
+            history.replaceState(null, '', location.pathname + location.search);
+        }
+    } catch (e) {
+        toast(t('xfer.parseError'));
+    }
+}
+
+/* ---------- hash 路由（手機掃碼後著陸） ---------- */
+async function handleXferHash() {
+    const h = location.hash || '';
+    if (h.startsWith('#i=')) {
+        const payload = h.slice(3);
+        if (!payload) return;
+        history.replaceState(null, '', location.pathname + location.search);
+        await xferApplyPayload(payload);
+    } else if (h.startsWith('#q=')) {
+        const body = h.slice(3);
+        const bar = body.indexOf('|');
+        if (bar < 0) return;
+        const left = body.slice(0, bar), chunk = body.slice(bar + 1);
+        const slash = left.indexOf('/');
+        if (slash < 0) return;
+        const idx = parseInt(left.slice(0, slash), 10);
+        const total = parseInt(left.slice(slash + 1), 10);
+        history.replaceState(null, '', location.pathname + location.search);
+        const r = await xferIngestFrame(idx, total, chunk);
+        if (r === 'partial') renderXferOverlay(xferLoadBuf());
+    }
+}
+/* ---------- 接收端 UI ---------- */
+function bindXferUI() {
+    document.getElementById('sendQrBtn').addEventListener('click', openSendQrModal);
+
+    document.getElementById('xferRestartBtn').addEventListener('click', () => {
+        xferClearBuf();
+        document.getElementById('xferOverlay').classList.remove('open');
+        toast(t('xfer.restarted'));
+    });
+
+    document.getElementById('xferScanBtn').addEventListener('click', openScannerModal);
+}
+
+/* ---------- 相機掃碼器 ---------- */
+let scanState = null;   /* { stream, timer, mode } */
+
+function scanStop() {
+    if (!scanState) return;
+    if (scanState.timer) clearInterval(scanState.timer);
+    if (scanState.stream) scanState.stream.getTracks().forEach(tr => tr.stop());
+    scanState = null;
+}
+
+function scanHandleDecoded(text) {
+    if (!text) return;
+    const m = text.match(/#(i|q)=([A-Za-z0-9_\-|/]+)/);
+    if (!m) return;
+    if (m[1] === 'i') {
+        scanStop();
+        const ov = document.getElementById('modalOverlay');
+        ov.classList.remove('open');
+        xferApplyPayload(m[2]);
+        return;
+    }
+    /* #q=idx/total|chunk */
+    const body = m[2];
+    const bar = body.indexOf('|');
+    if (bar < 0) return;
+    const left = body.slice(0, bar);      /* idx/total */
+    const chunk = body.slice(bar + 1);
+    const slash = left.indexOf('/');
+    if (slash < 0) return;
+    const idx = parseInt(left.slice(0, slash), 10);
+    const total = parseInt(left.slice(slash + 1), 10);
+    const status = document.getElementById('scanStatus');
+    const buf = xferLoadBuf();
+    const n = buf ? Object.keys(buf.chunks).length : 0;
+    if (status) status.textContent = t('xfer.received', { n: Math.min(n + 1, total), total });
+    xferIngestFrame(idx, total, chunk).then((r) => {
+        if (r === 'ok') {
+            scanStop();
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+    });
+}
+
+async function openScannerModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.innerHTML = `
+        <h3>${escapeHtml(t('xfer.scanTitle'))}</h3>
+        <div class="scan-wrap">
+            <div class="scan-video-box">
+                <video id="scanVideo" playsinline muted autoplay></video>
+                <div class="scan-reticle"></div>
+            </div>
+            <div class="scan-status" id="scanStatus">${escapeHtml(t('xfer.loading'))}</div>
+            <div class="qr-hint">${escapeHtml(t('xfer.scanHint'))}</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" id="scanCloseBtn">${escapeHtml(t('link.cancel'))}</button>
+        </div>
+    `;
+    overlay.classList.add('open');
+
+    const close = () => {
+        alive = false;
+        scanStop();
+        overlay.classList.remove('open');
+        overlay.removeEventListener('click', onOverlayClick);
+        content.removeEventListener('keydown', onKeydown);
+    };
+    const onOverlayClick = (e) => { if (e.target === overlay) close(); };
+    const onKeydown = (e) => { if (e.key === 'Escape') close(); };
+    document.getElementById('scanCloseBtn').addEventListener('click', close);
+    overlay.addEventListener('click', onOverlayClick);
+    content.addEventListener('keydown', onKeydown);
+
+    let alive = true;
+    const video = document.getElementById('scanVideo');
+    let stream;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    } catch (e) {
+        if (alive) document.getElementById('scanStatus').textContent = t('xfer.cameraError');
+        return;
+    }
+    if (!alive) { stream.getTracks().forEach(tr => tr.stop()); return; }
+    video.srcObject = stream;
+    try { await video.play(); } catch (e) { /* ignore */ }
+
+    /* decoder: native BarcodeDetector → jsQR fallback */
+    let mode = null, detector = null;
+    if ('BarcodeDetector' in window) {
+        try {
+            detector = new BarcodeDetector({ formats: ['qr_code'] });
+            mode = 'bd';
+        } catch (e) { detector = null; }
+    }
+    if (!mode) {
+        try {
+            if (typeof window.jsQR === 'undefined') {
+                await loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js');
+            }
+            if (typeof window.jsQR === 'function') mode = 'jsqr';
+        } catch (e) { /* stay null */ }
+    }
+    if (!alive) { stream.getTracks().forEach(tr => tr.stop()); return; }
+    if (!mode) {
+        document.getElementById('scanStatus').textContent = t('xfer.noDecoder');
+        scanState = { stream, timer: null, mode: null };
+        return;
+    }
+    document.getElementById('scanStatus').textContent = t('xfer.scanning');
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    scanState = { stream, timer: null, mode };
+
+    scanState.timer = setInterval(async () => {
+        if (!scanState || !video.videoWidth) return;
+        try {
+            if (mode === 'bd') {
+                const codes = await detector.detect(video);
+                if (codes && codes.length) scanHandleDecoded(codes[0].rawValue);
+            } else {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0);
+                const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = window.jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+                if (code && code.data) scanHandleDecoded(code.data);
+            }
+        } catch (e) { /* keep scanning */ }
+    }, 300);
 }
 
 /* ============================================================
@@ -2604,9 +3122,13 @@ function init() {
     bindSearch();
     bindAddWidget();
     bindKeyboard();
+    bindXferUI();
     renderAll();
     updateClock();
     setInterval(updateClock, 30000);
+    handleXferHash();
+    /* 已開住個頁時掃碼（hash-only 切換）都要處理 */
+    window.addEventListener('hashchange', handleXferHash);
 
     let resizeTimer;
     window.addEventListener('resize', () => {
