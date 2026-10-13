@@ -970,6 +970,8 @@
         .settings-inline { display: flex; gap: 8px; align-items: center; }
         .settings-inline select { flex: 1; }
         .settings-inline input[type="color"] { width: 44px; height: 32px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); cursor: pointer; }
+        .settings-check { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.82rem; color: var(--text); user-select: none; }
+        .settings-check input { accent-color: var(--accent); cursor: pointer; }
 
         /* ===== Command palette（Ctrl+Shift+K） ===== */
         .cmdk-overlay {
@@ -1100,6 +1102,11 @@
             <option value="cozy" data-i18n="density.cozy">Cozy</option>
             <option value="spacious" data-i18n="density.spacious">Spacious</option>
         </select>
+        <label class="settings-check">
+            <input type="checkbox" id="editModeCheck">
+            <span data-i18n="settings.editMode">Edit mode</span>
+        </label>
+        <div class="settings-hint" data-i18n="settings.editModeHint">Show remove (×) buttons on page tabs — keeps you from closing a tab full of bookmarks by accident.</div>
     </div>
     <div class="settings-row">
         <label data-i18n="settings.accentColor">Accent</label>
@@ -1521,6 +1528,8 @@ const I18N = {
         'stock.symbolsLabel': 'Symbols (comma separated)',
         'stock.symbolsHint': 'A-shares sh/sz + 6 digits · HK hk + 5 digits · US us + ticker (e.g. sh000001, hk00700, usAAPL)',
         'stock.saved': '✅ Symbol list saved',
+        'settings.editMode': 'Edit mode',
+        'settings.editModeHint': 'Show remove (×) buttons on page tabs — keeps you from closing a tab full of bookmarks by accident.',
         'common.addWidget': '+ Add widget',
         'common.toastSaveFailed': '⚠️ Could not save — storage may be full or blocked.'
     },
@@ -1732,6 +1741,8 @@ const I18N = {
         'stock.symbolsLabel': '股票代號（逗號分隔）',
         'stock.symbolsHint': 'A股 sh/sz+6位 · 港股 hk+5位 · 美股 us+大寫代號（例如 sh000001, hk00700, usAAPL）',
         'stock.saved': '✅ 已儲存代號清單',
+        'settings.editMode': '編輯模式',
+        'settings.editModeHint': '喺頁面標籤顯示刪除（×）掣 — 防意外刪走裝滿書籤嘅標籤。',
         'common.addWidget': '+ 新增小工具',
         'common.toastSaveFailed': '⚠️ 無法儲存 — 儲存空間可能已滿或被封鎖。'
     },
@@ -1943,6 +1954,8 @@ const I18N = {
         'stock.symbolsLabel': '股票代码（逗号分隔）',
         'stock.symbolsHint': 'A股 sh/sz+6位 · 港股 hk+5位 · 美股 us+大写代码（例如 sh000001, hk00700, usAAPL）',
         'stock.saved': '✅ 已保存代码列表',
+        'settings.editMode': '编辑模式',
+        'settings.editModeHint': '在页面标签上显示删除（×）按钮 — 防误删装满书签的标签。',
         'common.addWidget': '+ 新增小组件',
         'common.toastSaveFailed': '⚠️ 无法保存 — 存储空间可能已满或被阻止。'
     }
@@ -2168,6 +2181,7 @@ const DEFAULT_DATA = {
         bgMode: 'color',          /* color | bing | custom */
         bgImage: '',
         density: 'cozy',          /* compact | cozy | spacious */
+        editMode: false,          /* true = 顯示 tab 刪除掣 */
         pageTitle: 'My Startpage',
         searchEngine: 'https://www.google.com/search?q=',
         theme: 'dark',
@@ -2357,6 +2371,10 @@ function applyTheme() {
     document.body.dataset.density = s.density || 'cozy';
     const densitySel = document.getElementById('densitySelect');
     if (densitySel) densitySel.value = s.density || 'cozy';
+
+    /* ---- Edit mode ---- */
+    const editModeCheck = document.getElementById('editModeCheck');
+    if (editModeCheck) editModeCheck.checked = !!s.editMode;
 
     /* ---- Background（純色 / Bing 每日一圖 / 自訂圖片） ---- */
     const bgModeSel = document.getElementById('bgModeSelect');
@@ -2616,8 +2634,10 @@ function renderTabs() {
     data.pages.forEach((page, i) => {
         const tab = document.createElement('div');
         tab.className = 'page-tab' + (i === activePageIndex ? ' active' : '');
+        /* × 刪除掣只喺「編輯模式」先顯示（防意外刪走成 tab 書籤） */
+        const showClose = data.settings.editMode && data.pages.length > 1;
         tab.innerHTML = `<span>${escapeHtml(page.name)}</span>` +
-            (data.pages.length > 1 ? `<span class="tab-close" data-page="${i}" title="Delete page">×</span>` : '');
+            (showClose ? `<span class="tab-close" data-page="${i}" title="Delete page">×</span>` : '');
         tab.addEventListener('click', (e) => {
             if (e.target.classList.contains('tab-close')) return;
             activePageIndex = i;
@@ -3057,6 +3077,14 @@ function bindSettings() {
         data.settings.density = e.target.value;
         applyTheme();
         saveData();
+    });
+
+    /* ---- Edit mode（tab 刪除掣開關） ---- */
+    const editModeCheck = document.getElementById('editModeCheck');
+    if (editModeCheck) editModeCheck.addEventListener('change', (e) => {
+        data.settings.editMode = e.target.checked;
+        saveData();
+        renderTabs();
     });
 
     /* ---- Background mode / image ---- */
