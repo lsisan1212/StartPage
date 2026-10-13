@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Startpage</title>
+    <meta name="theme-color" content="#7c8cf8">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
     <style>
         /* ===== CSS Variables ===== */
         :root {
@@ -857,6 +861,154 @@
             .logo { display: none; }
         }
 
+        /* ===== Density（compact / cozy / spacious） ===== */
+        body[data-density="compact"] .content { padding: 10px 24px 32px; }
+        body[data-density="compact"] .widget-header { padding: 8px 16px 6px; }
+        body[data-density="compact"] .widget-body { padding: 0 16px 8px; }
+        body[data-density="compact"] .link-list { gap: 1px; }
+        body[data-density="compact"] .link-item { padding: 2px 10px; }
+        body[data-density="compact"] .add-link-btn { padding: 3px 10px; margin-top: 2px; }
+        body[data-density="compact"] .widget[data-view="icons"] .link-list { gap: 4px; }
+        body[data-density="compact"] .widget[data-view="icons"] .link-item { min-height: 58px; padding: 5px 4px 4px; gap: 4px; }
+        body[data-density="compact"] .widget[data-view="icons"] .link-item .link-favicon { width: 26px; height: 26px; }
+
+        body[data-density="spacious"] .content { padding: 22px 24px 64px; }
+        body[data-density="spacious"] .widget-header { padding: 14px 16px 12px; }
+        body[data-density="spacious"] .widget-body { padding: 0 16px 18px; }
+        body[data-density="spacious"] .link-list { gap: 4px; }
+        body[data-density="spacious"] .link-item { padding: 8px 10px; }
+        body[data-density="spacious"] .add-link-btn { padding: 8px 10px; margin-top: 6px; }
+        body[data-density="spacious"] .widget[data-view="icons"] .link-list { gap: 8px; }
+        body[data-density="spacious"] .widget[data-view="icons"] .link-item { min-height: 92px; padding: 14px 6px 12px; gap: 8px; }
+        body[data-density="spacious"] .widget[data-view="icons"] .link-item .link-favicon { width: 36px; height: 36px; }
+
+        /* ===== Widget collapse ===== */
+        .widget[data-collapsed="1"] .widget-body { display: none; }
+
+        /* ===== Favicon letter fallback ===== */
+        .fav-fallback {
+            width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.62rem; font-weight: 700; color: #fff; text-transform: uppercase;
+        }
+        .widget[data-view="icons"] .link-item .fav-fallback { width: 32px; height: 32px; border-radius: 7px; font-size: 1rem; }
+        .dw-name .fav-fallback { width: 18px; height: 18px; font-size: 0.62rem; }
+
+        /* ===== Link click count ===== */
+        .link-count { font-size: 0.68rem; color: var(--text-muted); opacity: 0.8; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+        .mv-rank { width: 16px; text-align: center; color: var(--text-muted); font-size: 0.7rem; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+        /* ===== Data widgets 通用（crypto / weather / mostvisited） ===== */
+        .dw { padding: 2px 0; }
+        .dw-loading, .dw-error, .dw-empty { color: var(--text-muted); font-size: 0.8rem; padding: 12px 2px; text-align: center; }
+        .dw-error { color: #ff8787; }
+        .dw-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 2px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .dw-row:last-child { border-bottom: none; }
+        .dw-name { display: flex; align-items: center; gap: 8px; color: var(--text); min-width: 0; }
+        .dw-sym { font-weight: 700; letter-spacing: 0.3px; }
+        .dw-id { color: var(--text-muted); font-size: 0.7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dw-right { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .dw-price { font-variant-numeric: tabular-nums; color: var(--text); }
+        .dw-chg { font-size: 0.74rem; font-variant-numeric: tabular-nums; min-width: 66px; text-align: right; }
+        .dw-up { color: #ff6b6b; }   /* 漲 = 紅（A股／幣圈習慣） */
+        .dw-down { color: #2fd07a; } /* 跌 = 綠 */
+
+        /* ===== Weather widget ===== */
+        .wx-main { display: flex; align-items: center; gap: 14px; padding: 4px 2px 8px; }
+        .wx-icon { font-size: 2.3rem; line-height: 1; }
+        .wx-temp { font-size: 1.9rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.1; }
+        .wx-desc { color: var(--text-muted); font-size: 0.8rem; }
+        .wx-city { color: var(--text); font-size: 0.85rem; font-weight: 600; }
+        .wx-meta { display: flex; gap: 12px; flex-wrap: wrap; color: var(--text-muted); font-size: 0.74rem; padding-top: 7px; border-top: 1px solid var(--border); }
+        .wx-meta b { color: var(--text); font-weight: 600; }
+
+        /* ===== Notes widget ===== */
+        .note-area {
+            width: 100%; min-height: 110px; resize: vertical;
+            background: color-mix(in srgb, var(--text) 7%, transparent);
+            border: 1px solid var(--border); border-radius: 8px;
+            color: var(--text); padding: 10px; font-size: 0.85rem; line-height: 1.5;
+            font-family: var(--font); outline: none;
+        }
+        .note-area:focus { border-color: var(--accent); }
+
+        /* ===== Todo widget ===== */
+        .todo-list { display: flex; flex-direction: column; gap: 1px; }
+        .todo-item { display: flex; align-items: center; gap: 8px; padding: 4px 2px; font-size: 0.85rem; color: var(--text); }
+        .todo-item input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+        .todo-item.done .todo-text { text-decoration: line-through; color: var(--text-muted); }
+        .todo-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .todo-del { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.72rem; padding: 2px 4px; border-radius: 4px; opacity: 0; transition: opacity 0.15s; font-family: var(--font); }
+        .todo-item:hover .todo-del { opacity: 1; }
+        .todo-del:hover { color: #ff6b6b; }
+        .todo-add { display: flex; gap: 6px; margin-top: 8px; }
+        .todo-add input {
+            flex: 1; background: color-mix(in srgb, var(--text) 7%, transparent);
+            border: 1px solid var(--border); border-radius: 6px; color: var(--text);
+            padding: 6px 10px; font-size: 0.82rem; outline: none; font-family: var(--font);
+        }
+        .todo-add input:focus { border-color: var(--accent); }
+        .todo-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.72rem; color: var(--text-muted); }
+        .todo-clear { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.72rem; padding: 2px 4px; font-family: var(--font); }
+        .todo-clear:hover { color: var(--accent); }
+
+        /* ===== Timer widget ===== */
+        .tmr { text-align: center; padding: 4px 0 2px; }
+        .tmr-modes { display: flex; gap: 4px; justify-content: center; margin-bottom: 10px; flex-wrap: wrap; }
+        .tmr-mode {
+            padding: 3px 10px; font-size: 0.72rem; border-radius: 20px;
+            border: 1px solid var(--border); background: none; color: var(--text-muted);
+            cursor: pointer; font-family: var(--font); transition: all 0.15s;
+        }
+        .tmr-mode:hover { color: var(--text); }
+        .tmr-mode.active { border-color: var(--accent); color: var(--accent); }
+        .tmr-time { font-size: 2.1rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); letter-spacing: 1px; }
+        .tmr-time.running { color: var(--accent); }
+        .tmr-ctrl { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+
+        /* ===== Settings 新增控件 ===== */
+        .settings-inline { display: flex; gap: 8px; align-items: center; }
+        .settings-inline select { flex: 1; }
+        .settings-inline input[type="color"] { width: 44px; height: 32px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); cursor: pointer; }
+
+        /* ===== Command palette（Ctrl+Shift+K） ===== */
+        .cmdk-overlay {
+            position: fixed; inset: 0; z-index: 4000;
+            background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px);
+            display: none; align-items: flex-start; justify-content: center; padding-top: 12vh;
+        }
+        .cmdk-overlay.open { display: flex; }
+        .cmdk {
+            width: min(600px, 92vw); background: var(--modal-bg);
+            border: 1px solid var(--border); border-radius: 14px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5); overflow: hidden;
+        }
+        .cmdk-input {
+            width: 100%; background: none; border: none; outline: none;
+            color: var(--text); font-size: 1rem; padding: 15px 18px; font-family: var(--font);
+        }
+        .cmdk-list { max-height: 46vh; overflow-y: auto; border-top: 1px solid var(--border); }
+        .cmdk-group { padding: 7px 16px 3px; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+        .cmdk-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; font-size: 0.88rem; color: var(--text); }
+        .cmdk-item .cmdk-ico { width: 18px; text-align: center; flex-shrink: 0; }
+        .cmdk-item .cmdk-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cmdk-item .cmdk-sub { margin-left: auto; font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; padding-left: 10px; }
+        .cmdk-item.active { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+        .cmdk-empty { padding: 18px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+        .cmdk-hint { padding: 8px 16px; border-top: 1px solid var(--border); font-size: 0.7rem; color: var(--text-muted); display: flex; gap: 14px; flex-wrap: wrap; }
+
+        /* ===== 拖 URL 落入頁 ===== */
+        .drop-url-overlay {
+            position: fixed; inset: 0; z-index: 3500;
+            background: color-mix(in srgb, var(--accent) 14%, rgba(0, 0, 0, 0.55));
+            display: none; align-items: center; justify-content: center; pointer-events: none;
+        }
+        .drop-url-overlay.show { display: flex; }
+        .drop-url-card {
+            background: var(--modal-bg); border: 2px dashed var(--accent); border-radius: 16px;
+            padding: 26px 36px; font-size: 1rem; color: var(--text); text-align: center;
+        }
+
         /* ===== Print ===== */
         @media print {
             .topbar, .page-tabs, .widget-actions, .add-widget-card, .add-link-btn, .settings-panel {
@@ -912,6 +1064,7 @@
     </div>
     <div class="topbar-right">
         <span class="clock" id="clock"></span>
+        <button class="btn btn-icon" id="paletteBtn" data-i18n-title="palette.title" title="Command palette (Ctrl+Shift+K)">⌘</button>
         <button class="btn btn-icon" id="settingsBtn" title="Settings">⚙️</button>
         <button class="btn btn-primary" id="addWidgetBtn" data-i18n="toolbar.addWidget">+ Widget</button>
     </div>
@@ -941,12 +1094,27 @@
             <option value="list" data-i18n="view.list">List</option>
             <option value="icons" data-i18n="view.icons">Icons</option>
         </select>
+        <label data-i18n="density.label">Density</label>
+        <select id="densitySelect">
+            <option value="compact" data-i18n="density.compact">Compact</option>
+            <option value="cozy" data-i18n="density.cozy">Cozy</option>
+            <option value="spacious" data-i18n="density.spacious">Spacious</option>
+        </select>
     </div>
     <div class="settings-row">
         <label data-i18n="settings.accentColor">Accent</label>
         <input type="color" id="accentColorPicker" value="#7c8cf8">
         <label data-i18n="settings.background">Background</label>
-        <input type="color" id="bgColorPicker" value="#1a1a2e">
+        <div class="settings-inline">
+            <select id="bgModeSelect">
+                <option value="color" data-i18n="bg.color">Colour</option>
+                <option value="bing" data-i18n="bg.bing">Bing daily image</option>
+                <option value="custom" data-i18n="bg.custom">Image URL</option>
+            </select>
+            <input type="color" id="bgColorPicker" value="#1a1a2e">
+        </div>
+        <input type="text" id="bgImageInput" placeholder="https://…" data-i18n-placeholder="bg.url" style="display:none">
+        <div class="settings-hint" data-i18n="bg.hint"></div>
         <label data-i18n="settings.pageTitle">Page title</label>
         <input type="text" id="pageTitleInput" placeholder="My Startpage">
     </div>
@@ -955,6 +1123,8 @@
         <button class="btn" id="exportBtn" data-i18n="settings.export">📤 Export data</button>
         <button class="btn" id="importBtn" data-i18n="settings.import">📥 Import data</button>
         <input type="file" id="importFileInput" accept=".json" style="display:none">
+        <button class="btn" id="importBmBtn" data-i18n="bm.import">📑 Import browser bookmarks</button>
+        <input type="file" id="importBmInput" accept=".html,.htm,text/html" style="display:none">
         <button class="btn" id="copyDataBtn" data-i18n="settings.copyData">📋 Copy data</button>
         <button class="btn" id="pasteDataBtn" data-i18n="settings.pasteData">📋 Paste data</button>
         <button class="btn btn-primary" id="sendQrBtn" data-i18n="xfer.send">📱 Send to phone</button>
@@ -989,6 +1159,24 @@
             <button class="btn" id="xferRestartBtn" data-i18n="xfer.startOver">Start over</button>
         </div>
     </div>
+</div>
+
+<!-- ===== Command Palette（Ctrl+Shift+K） ===== -->
+<div class="cmdk-overlay" id="cmdkOverlay">
+    <div class="cmdk">
+        <input class="cmdk-input" id="cmdkInput" type="text" autocomplete="off" spellcheck="false">
+        <div class="cmdk-list" id="cmdkList"></div>
+        <div class="cmdk-hint">
+            <span data-i18n="palette.hintNav">↑↓ navigate</span>
+            <span data-i18n="palette.hintOpen">↵ open</span>
+            <span data-i18n="palette.hintClose">esc close</span>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 拖 URL 落入頁 ===== -->
+<div class="drop-url-overlay" id="dropUrlOverlay">
+    <div class="drop-url-card" id="dropUrlCard"></div>
 </div>
 
 <!-- ===== Toast ===== -->
@@ -1245,6 +1433,85 @@ const I18N = {
         'link.updated': '✅ Link updated',
         'link.deleted': '🗑 Link deleted',
         'link.deleteConfirm': 'Delete link "{name}"?',
+        'widgetType.links': 'Link list',
+        'widgetType.crypto': 'Crypto prices',
+        'widgetType.weather': 'Weather',
+        'widgetType.notes': 'Notes',
+        'widgetType.todo': 'Todo list',
+        'widgetType.timer': 'Timer / Pomodoro',
+        'widgetType.mostvisited': 'Most visited',
+        'addWidget.title': 'New widget',
+        'addWidget.type': 'Type',
+        'w.collapse': 'Collapse',
+        'w.expand': 'Expand',
+        'w.refresh': 'Refresh',
+        'link.clicks': '{n} clicks',
+        'crypto.loading': 'Fetching prices…',
+        'crypto.error': '⚠️ Could not fetch prices (CoinGecko rate limit?)',
+        'crypto.stale': '⚠️ Showing stale data',
+        'crypto.empty': 'No coins yet — click the widget menu to edit',
+        'crypto.editCoins': 'Coins',
+        'crypto.coinsLabel': 'CoinGecko IDs (comma separated)',
+        'crypto.coinsHint': 'e.g. bitcoin, ethereum, solana',
+        'crypto.saved': '✅ Coin list saved',
+        'weather.loading': 'Fetching weather…',
+        'weather.error': '⚠️ Could not fetch weather',
+        'weather.cityNotFound': '⚠️ City not found',
+        'weather.editCity': 'City',
+        'weather.cityLabel': 'City name',
+        'weather.cityHint': 'e.g. Macau, Hong Kong, Taipei',
+        'weather.saved': '✅ City saved',
+        'weather.feels': 'Feels',
+        'weather.humidity': 'Humidity',
+        'weather.wind': 'Wind',
+        'weather.today': 'Today',
+        'notes.placeholder': 'Type anything — saves automatically…',
+        'todo.placeholder': 'Add a task and press Enter…',
+        'todo.add': 'Add',
+        'todo.empty': 'No tasks yet 🎉',
+        'todo.progress': '{done}/{total} done',
+        'todo.clearDone': 'Clear done',
+        'timer.pomodoro': 'Pomodoro 25',
+        'timer.short': 'Break 5',
+        'timer.long': 'Long break 15',
+        'timer.start': 'Start',
+        'timer.pause': 'Pause',
+        'timer.reset': 'Reset',
+        'timer.done': '⏰ Time is up!',
+        'mv.empty': 'No clicks recorded yet — browse a bit and your top links show up here.',
+        'palette.title': 'Command palette (Ctrl+Shift+K)',
+        'palette.placeholder': 'Search links or run a command…',
+        'palette.links': 'Links',
+        'palette.actions': 'Actions',
+        'palette.pages': 'Go to page',
+        'palette.themes': 'Theme',
+        'palette.density': 'Density',
+        'palette.noResults': 'No matches',
+        'palette.hintNav': '↑↓ navigate',
+        'palette.hintOpen': '↵ open',
+        'palette.hintClose': 'esc close',
+        'palette.addWidget': 'Add widget',
+        'palette.addPage': 'Add page',
+        'palette.settings': 'Open settings',
+        'density.label': 'Density',
+        'density.compact': 'Compact',
+        'density.cozy': 'Cozy',
+        'density.spacious': 'Spacious',
+        'bg.color': 'Colour',
+        'bg.bing': 'Bing daily image',
+        'bg.custom': 'Image URL',
+        'bg.url': 'https://… (image URL)',
+        'bg.hint': 'Daily image / custom URL are fetched from the internet on each load.',
+        'bm.import': '📑 Import browser bookmarks',
+        'bm.imported': '📑 Imported {folders} folder(s) · {links} link(s)',
+        'bm.parseError': '⚠️ Not a valid bookmark file',
+        'bm.noLinks': '⚠️ No bookmarks found in file',
+        'bm.pageName': 'Imported',
+        'bm.summary': 'Import {folders} folder(s) · {links} link(s) as a new page? Current data is kept.',
+        'qa.title': 'Add link',
+        'qa.widget': 'Target widget',
+        'qa.newWidget': '➕ New widget (from domain)',
+        'qa.added': '✅ Link added',
         'common.addWidget': '+ Add widget',
         'common.toastSaveFailed': '⚠️ Could not save — storage may be full or blocked.'
     },
@@ -1368,6 +1635,85 @@ const I18N = {
         'link.updated': '✅ 已更新連結',
         'link.deleted': '🗑 已刪除連結',
         'link.deleteConfirm': '確定刪除連結「{name}」嗎？',
+        'widgetType.links': '連結清單',
+        'widgetType.crypto': '加密貨幣報價',
+        'widgetType.weather': '天氣',
+        'widgetType.notes': '便簽',
+        'widgetType.todo': '待辦清單',
+        'widgetType.timer': '計時器／番茄鐘',
+        'widgetType.mostvisited': '最常用書籤',
+        'addWidget.title': '新增小工具',
+        'addWidget.type': '類型',
+        'w.collapse': '收埋',
+        'w.expand': '展開',
+        'w.refresh': '重新整理',
+        'link.clicks': '點擊 {n} 次',
+        'crypto.loading': '正在取得報價…',
+        'crypto.error': '⚠️ 抓唔到報價（CoinGecko 限速？）',
+        'crypto.stale': '⚠️ 顯示為舊資料',
+        'crypto.empty': '未有貨幣 — 喺小工具選單編輯',
+        'crypto.editCoins': '貨幣',
+        'crypto.coinsLabel': 'CoinGecko ID（逗號分隔）',
+        'crypto.coinsHint': '例如 bitcoin, ethereum, solana',
+        'crypto.saved': '✅ 已儲存貨幣清單',
+        'weather.loading': '正在取得天氣…',
+        'weather.error': '⚠️ 抓唔到天氣資料',
+        'weather.cityNotFound': '⚠️ 搵唔到個城市',
+        'weather.editCity': '城市',
+        'weather.cityLabel': '城市名稱',
+        'weather.cityHint': '例如 澳門、香港、台北',
+        'weather.saved': '✅ 已儲存城市',
+        'weather.feels': '體感',
+        'weather.humidity': '濕度',
+        'weather.wind': '風速',
+        'weather.today': '今日',
+        'notes.placeholder': '隨手寫啲嘢 — 會自動儲存…',
+        'todo.placeholder': '輸入任務按 Enter 新增…',
+        'todo.add': '新增',
+        'todo.empty': '未有任務 🎉',
+        'todo.progress': '已完成 {done}/{total}',
+        'todo.clearDone': '清除已完成',
+        'timer.pomodoro': '番茄鐘 25',
+        'timer.short': '小休 5',
+        'timer.long': '長休 15',
+        'timer.start': '開始',
+        'timer.pause': '暫停',
+        'timer.reset': '重設',
+        'timer.done': '⏰ 時間到！',
+        'mv.empty': '未有点击記錄 — 用多啲就會喺呢度顯示最常用書籤。',
+        'palette.title': '指令面板（Ctrl+Shift+K）',
+        'palette.placeholder': '搜尋書籤或執行指令…',
+        'palette.links': '書籤',
+        'palette.actions': '動作',
+        'palette.pages': '前往頁面',
+        'palette.themes': '主題',
+        'palette.density': '密度',
+        'palette.noResults': '搵唔到相關內容',
+        'palette.hintNav': '↑↓ 選擇',
+        'palette.hintOpen': '↵ 開啓',
+        'palette.hintClose': 'esc 關閉',
+        'palette.addWidget': '新增小工具',
+        'palette.addPage': '新增頁面',
+        'palette.settings': '開啓設定',
+        'density.label': '密度',
+        'density.compact': '緊密',
+        'density.cozy': '適中',
+        'density.spacious': '寬敞',
+        'bg.color': '純色',
+        'bg.bing': 'Bing 每日一圖',
+        'bg.custom': '圖片網址',
+        'bg.url': 'https://…（圖片網址）',
+        'bg.hint': '每日一圖／自訂網址每次開頁都會向相關伺服器抓圖。',
+        'bm.import': '📑 匯入瀏覽器書籤',
+        'bm.imported': '📑 已匯入 {folders} 個資料夾 · {links} 個書籤',
+        'bm.parseError': '⚠️ 唔係有效嘅書籤檔',
+        'bm.noLinks': '⚠️ 個檔搵唔到書籤',
+        'bm.pageName': '匯入的書籤',
+        'bm.summary': '匯入 {folders} 個資料夾 · {links} 個書籤，成為新頁面？現有數據會保留。',
+        'qa.title': '新增連結',
+        'qa.widget': '目標小工具',
+        'qa.newWidget': '➕ 新小工具（用網域名稱）',
+        'qa.added': '✅ 已新增連結',
         'common.addWidget': '+ 新增小工具',
         'common.toastSaveFailed': '⚠️ 無法儲存 — 儲存空間可能已滿或被封鎖。'
     },
@@ -1491,6 +1837,85 @@ const I18N = {
         'link.updated': '✅ 已更新链接',
         'link.deleted': '🗑 已删除链接',
         'link.deleteConfirm': '确定删除链接“{name}”吗？',
+        'widgetType.links': '链接列表',
+        'widgetType.crypto': '加密货币报价',
+        'widgetType.weather': '天气',
+        'widgetType.notes': '便签',
+        'widgetType.todo': '待办列表',
+        'widgetType.timer': '计时器／番茄钟',
+        'widgetType.mostvisited': '最常用书签',
+        'addWidget.title': '新增小组件',
+        'addWidget.type': '类型',
+        'w.collapse': '收起',
+        'w.expand': '展开',
+        'w.refresh': '刷新',
+        'link.clicks': '点击 {n} 次',
+        'crypto.loading': '正在取得报价…',
+        'crypto.error': '⚠️ 抓不到报价（CoinGecko 限速？）',
+        'crypto.stale': '⚠️ 显示为旧数据',
+        'crypto.empty': '暂无货币 — 在组件菜单中编辑',
+        'crypto.editCoins': '货币',
+        'crypto.coinsLabel': 'CoinGecko ID（逗号分隔）',
+        'crypto.coinsHint': '例如 bitcoin, ethereum, solana',
+        'crypto.saved': '✅ 已保存货币列表',
+        'weather.loading': '正在取得天气…',
+        'weather.error': '⚠️ 抓不到天气数据',
+        'weather.cityNotFound': '⚠️ 找不到该城市',
+        'weather.editCity': '城市',
+        'weather.cityLabel': '城市名称',
+        'weather.cityHint': '例如 澳门、香港、台北',
+        'weather.saved': '✅ 已保存城市',
+        'weather.feels': '体感',
+        'weather.humidity': '湿度',
+        'weather.wind': '风速',
+        'weather.today': '今日',
+        'notes.placeholder': '随手写点什么 — 会自动保存…',
+        'todo.placeholder': '输入任务按 Enter 新增…',
+        'todo.add': '新增',
+        'todo.empty': '暂无任务 🎉',
+        'todo.progress': '已完成 {done}/{total}',
+        'todo.clearDone': '清除已完成',
+        'timer.pomodoro': '番茄钟 25',
+        'timer.short': '小休 5',
+        'timer.long': '长休 15',
+        'timer.start': '开始',
+        'timer.pause': '暂停',
+        'timer.reset': '重置',
+        'timer.done': '⏰ 时间到！',
+        'mv.empty': '暂无点击记录 — 用多了就会在这里显示最常用书签。',
+        'palette.title': '命令面板（Ctrl+Shift+K）',
+        'palette.placeholder': '搜索书签或执行命令…',
+        'palette.links': '书签',
+        'palette.actions': '动作',
+        'palette.pages': '前往页面',
+        'palette.themes': '主题',
+        'palette.density': '密度',
+        'palette.noResults': '找不到相关内容',
+        'palette.hintNav': '↑↓ 选择',
+        'palette.hintOpen': '↵ 打开',
+        'palette.hintClose': 'esc 关闭',
+        'palette.addWidget': '新增小组件',
+        'palette.addPage': '新增页面',
+        'palette.settings': '打开设置',
+        'density.label': '密度',
+        'density.compact': '紧密',
+        'density.cozy': '适中',
+        'density.spacious': '宽敞',
+        'bg.color': '纯色',
+        'bg.bing': 'Bing 每日一图',
+        'bg.custom': '图片网址',
+        'bg.url': 'https://…（图片网址）',
+        'bg.hint': '每日一图／自定义网址每次开页都会向相关服务器抓图。',
+        'bm.import': '📑 导入浏览器书签',
+        'bm.imported': '📑 已导入 {folders} 个文件夹 · {links} 个书签',
+        'bm.parseError': '⚠️ 不是有效的书签文件',
+        'bm.noLinks': '⚠️ 文件中找不到书签',
+        'bm.pageName': '导入的书签',
+        'bm.summary': '导入 {folders} 个文件夹 · {links} 个书签，成为新页面？现有数据会保留。',
+        'qa.title': '新增链接',
+        'qa.widget': '目标小组件',
+        'qa.newWidget': '➕ 新小组件（用域名）',
+        'qa.added': '✅ 已新增链接',
         'common.addWidget': '+ 新增小组件',
         'common.toastSaveFailed': '⚠️ 无法保存 — 存储空间可能已满或被阻止。'
     }
@@ -1521,6 +1946,9 @@ function applyLanguage() {
     });
     document.querySelectorAll('[data-i18n-label]').forEach(el => {
         el.label = t(el.dataset.i18nLabel);
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        el.title = t(el.dataset.i18nTitle);
     });
 }
 
@@ -1682,6 +2110,20 @@ const DEFAULT_DATA = {
                         { label: 'SegFault', url: 'https://shell.segfault.net/#/login' },
                         { label: 'Online Notepad', url: 'https://notepad.js.org/' }
                     ]
+                },
+                {
+                    id: 'w-crypto',
+                    title: 'Crypto',
+                    type: 'crypto',
+                    color: '#fb923c',
+                    coins: ['bitcoin', 'ethereum', 'solana']
+                },
+                {
+                    id: 'w-weather',
+                    title: 'Weather',
+                    type: 'weather',
+                    color: '#22d3ee',
+                    city: 'Macau'
                 }
             ]
         }
@@ -1689,6 +2131,9 @@ const DEFAULT_DATA = {
     settings: {
         accentColor: '#7c8cf8',
         bgColor: '#1a1a2e',
+        bgMode: 'color',          /* color | bing | custom */
+        bgImage: '',
+        density: 'cozy',          /* compact | cozy | spacious */
         pageTitle: 'My Startpage',
         searchEngine: 'https://www.google.com/search?q=',
         theme: 'dark',
@@ -1705,6 +2150,7 @@ let activePageIndex = 0;
 let dragState = { widgetId: null, fromPage: null };
 let linkDrag = null;      /* { widgetId, linkIndex, el } — link 拖拽中 */
 let linkPhEl = null;      /* link 重排 placeholder */
+let internalDrag = false; /* 內部拖曳中（widget/link 重排）→ 唔當外部 URL drop */
 
 const AI_ENGINE_PREFIXES = [
     'https://chat.deepseek.com',
@@ -1716,27 +2162,56 @@ const AI_ENGINE_PREFIXES = [
     'https://www.perplexity.ai'
 ];
 
+/* Bing 每日一圖（redirect 到當日 JPEG） */
+const BING_IMAGE_URL = 'https://bing.bitver.com/2';
+
 /* ============================================================
    5. PERSISTENCE
    ============================================================ */
+/** 正規化舊數據：補 settings / type / view / stats，並做一次性升級遷移 */
+function normalizeData(d) {
+    if (!d.settings) d.settings = {};
+    const def = DEFAULT_DATA.settings;
+    for (const k in def) {
+        if (d.settings[k] === undefined) d.settings[k] = def[k];
+    }
+    if (!d.stats || typeof d.stats !== 'object') d.stats = {};
+    (d.pages || []).forEach(p => (p.widgets || []).forEach(w => {
+        if (!w.type) w.type = 'links';
+        if (!w.view) w.view = 'list';
+        if (w.type === 'todo' && !w.items) w.items = [];
+        if (w.type === 'notes' && w.text == null) w.text = '';
+    }));
+
+    /* ---- 一次性遷移（v2 升級）：補演示用 crypto / weather 小工具 ---- */
+    if (!d._v2 && d.pages && d.pages.length) {
+        d._v2 = true;
+        const hasType = (ty) => d.pages.some(p => (p.widgets || []).some(w => w.type === ty));
+        if (!hasType('crypto') && d.pages[0]) {
+            d.pages[0].widgets = d.pages[0].widgets || [];
+            d.pages[0].widgets.push({
+                id: uid('w'), title: 'Crypto', type: 'crypto', color: '#fb923c',
+                coins: ['bitcoin', 'ethereum', 'solana']
+            });
+        }
+        if (!hasType('weather') && d.pages[0]) {
+            d.pages[0].widgets = d.pages[0].widgets || [];
+            d.pages[0].widgets.push({
+                id: uid('w'), title: 'Weather', type: 'weather', color: '#22d3ee',
+                city: 'Macau'
+            });
+        }
+    }
+    return d;
+}
+
 function loadData() {
     try {
         const raw = localStorage.getItem('startpage-data-v1');
         if (raw) {
             const parsed = JSON.parse(raw);
             if (parsed.pages && Array.isArray(parsed.pages) && parsed.pages.length > 0) {
-                if (!parsed.settings) parsed.settings = {};
-                const def = DEFAULT_DATA.settings;
-                for (const k in def) {
-                    if (parsed.settings[k] === undefined) parsed.settings[k] = def[k];
-                }
-                // 補上舊資料缺少的 view 欄位
-                parsed.pages.forEach(p => {
-                    (p.widgets || []).forEach(w => {
-                        if (!w.view) w.view = 'list';
-                    });
-                });
-                return parsed;
+                return normalizeData(parsed);
             }
         }
     } catch (e) {
@@ -1830,6 +2305,37 @@ function applyTheme() {
     document.getElementById('themeSelect').value = s.theme || 'dark';
     document.getElementById('langSelect').value = s.lang || 'en';
     document.getElementById('defaultViewSelect').value = s.defaultView || 'list';
+
+    /* ---- Density ---- */
+    document.body.dataset.density = s.density || 'cozy';
+    const densitySel = document.getElementById('densitySelect');
+    if (densitySel) densitySel.value = s.density || 'cozy';
+
+    /* ---- Background（純色 / Bing 每日一圖 / 自訂圖片） ---- */
+    const bgModeSel = document.getElementById('bgModeSelect');
+    if (bgModeSel) bgModeSel.value = s.bgMode || 'color';
+    const bgImgInput = document.getElementById('bgImageInput');
+    if (bgImgInput) {
+        bgImgInput.value = s.bgImage || '';
+        bgImgInput.style.display = (s.bgMode === 'custom') ? '' : 'none';
+    }
+    const bgColorPicker = document.getElementById('bgColorPicker');
+    if (bgColorPicker) bgColorPicker.style.visibility = (s.bgMode === 'color') ? '' : 'hidden';
+
+    const bgUrl = s.bgMode === 'bing' ? BING_IMAGE_URL
+        : (s.bgMode === 'custom' && s.bgImage ? s.bgImage : '');
+    if (bgUrl) {
+        document.body.style.backgroundImage =
+            `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.55)), url("${bgUrl.replace(/"/g, '%22')}")`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundAttachment = 'fixed';
+    } else {
+        document.body.style.backgroundImage = '';
+        document.body.style.backgroundSize = '';
+        document.body.style.backgroundPosition = '';
+        document.body.style.backgroundAttachment = '';
+    }
 
     const sel = document.getElementById('searchEngine');
     const values = Array.from(sel.options).map(o => o.value);
@@ -2103,6 +2609,7 @@ function renderTabs() {
 }
 
 function renderWidgets() {
+    clearWidgetIntervals();
     const grid = document.getElementById('widgetsGrid');
     grid.innerHTML = '';
 
@@ -2115,24 +2622,36 @@ function renderWidgets() {
         card.dataset.widgetId = widget.id;
         applyWidgetColor(card, widget.color || '');
         applyWidgetView(card, widget.view || 'list');
+        card.dataset.collapsed = widget.collapsed ? '1' : '0';
 
         /* ---- Header ---- */
         const header = document.createElement('div');
         header.className = 'widget-header';
 
+        const wtype = widget.type || 'links';
         const viewIsIcons = (widget.view === 'icons');
         header.innerHTML = `
             <span class="widget-title">${escapeHtml(widget.title)}</span>
             <div class="widget-actions">
-                <button class="widget-action" data-action="view" title="${escapeHtml(viewIsIcons ? t('view.toList') : t('view.toIcons'))}">${viewIsIcons ? '▤' : '▦'}</button>
+                ${wtype === 'links' ? `<button class="widget-action" data-action="view" title="${escapeHtml(viewIsIcons ? t('view.toList') : t('view.toIcons'))}">${viewIsIcons ? '▤' : '▦'}</button>` : ''}
+                ${(wtype === 'crypto' || wtype === 'weather') ? `<button class="widget-action" data-action="refresh" title="${escapeHtml(t('w.refresh'))}">🔄</button>` : ''}
+                <button class="widget-action" data-action="collapse" title="${escapeHtml(t(widget.collapsed ? 'w.expand' : 'w.collapse'))}">${widget.collapsed ? '▸' : '▾'}</button>
                 <button class="widget-action" data-action="color" title="${escapeHtml(t('widget.colourTitle'))}">🎨</button>
-                <button class="widget-action" data-action="rename" title="Rename">✏️</button>
-                <button class="widget-action delete" data-action="delete" title="Delete">🗑</button>
+                <button class="widget-action" data-action="rename" title="${escapeHtml(t('widget.rename'))}">✏️</button>
+                <button class="widget-action delete" data-action="delete" title="${escapeHtml(t('widget.deleteConfirm', { name: widget.title }))}">🗑</button>
             </div>
         `;
-        header.querySelector('[data-action="view"]').addEventListener('click', (e) => {
+        header.querySelector('[data-action="view"]')?.addEventListener('click', (e) => {
             e.stopPropagation(); e.preventDefault();
             toggleWidgetView(widget.id);
+        });
+        header.querySelector('[data-action="collapse"]')?.addEventListener('click', (e) => {
+            e.stopPropagation(); e.preventDefault();
+            toggleWidgetCollapse(widget.id);
+        });
+        header.querySelector('[data-action="refresh"]')?.addEventListener('click', (e) => {
+            e.stopPropagation(); e.preventDefault();
+            refreshWidget(widget.id);
         });
         header.querySelector('[data-action="color"]').addEventListener('click', (e) => {
             e.stopPropagation(); e.preventDefault();
@@ -2140,7 +2659,8 @@ function renderWidgets() {
         });
         header.querySelector('[data-action="rename"]').addEventListener('click', (e) => {
             e.stopPropagation();
-            renameWidget(widget.id);
+            if ((widget.type || 'links') === 'links') renameWidget(widget.id);
+            else editWidgetConfig(widget.id);
         });
         header.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -2151,12 +2671,14 @@ function renderWidgets() {
         header.draggable = true;
         header.addEventListener('dragstart', (e) => {
             closeColorPop();
+            internalDrag = true;
             dragState = { widgetId: widget.id, fromPage: activePageIndex };
             card.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', widget.id);
         });
         header.addEventListener('dragend', () => {
+            internalDrag = false;
             card.classList.remove('dragging');
             dragState = { widgetId: null, fromPage: null };
             document.querySelectorAll('.widget').forEach(w => w.classList.remove('drag-over'));
@@ -2175,93 +2697,23 @@ function renderWidgets() {
         card.addEventListener('drop', (e) => {
             e.preventDefault();
             card.classList.remove('drag-over');
-            if (!dragState.widgetId || dragState.widgetId === widget.id) return;
-            reorderWidgets(dragState.widgetId, widget.id);
+            if (dragState.widgetId && dragState.widgetId !== widget.id) {
+                reorderWidgets(dragState.widgetId, widget.id);
+                return;
+            }
+            /* 外部拖入 URL → 直接加入此 widget */
+            const picked = pickUrlFromDrop(e);
+            if (picked) {
+                e.stopPropagation();
+                addLinkToWidget(widget.id, picked.url, picked.label);
+            }
         });
 
-        /* ---- Body ---- */
+        /* ---- Body（按 widget 類型分支渲染） ---- */
         const body = document.createElement('div');
         body.className = 'widget-body';
+        renderWidgetBody(widget, body);
 
-        const linkList = document.createElement('div');
-        linkList.className = 'link-list';
-
-        widget.links.forEach((link, li) => {
-            const item = document.createElement('a');
-            item.className = 'link-item';
-            item.href = link.url;
-            item.target = '_blank';
-            item.rel = 'noopener noreferrer';
-            item.title = link.label + '  ·  ' + link.url;
-            item.innerHTML = `
-                <img class="link-favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(getDomain(link.url))}&sz=64"
-                     onerror="this.style.visibility='hidden'" alt="">
-                <span class="link-label">${escapeHtml(link.label)}</span>
-                <span class="link-edit-actions">
-                    <button data-action="edit-link" title="${escapeHtml(t('link.editTitle'))}">✏️</button>
-                    <button data-action="delete-link" class="del" title="Delete">✕</button>
-                </span>
-            `;
-            item.querySelector('[data-action="edit-link"]').addEventListener('click', (e) => {
-                e.preventDefault(); e.stopPropagation();
-                editLink(widget.id, li);
-            });
-            item.querySelector('[data-action="delete-link"]').addEventListener('click', (e) => {
-                e.preventDefault(); e.stopPropagation();
-                deleteLink(widget.id, li);
-            });
-
-            /* ---- Link drag-to-reorder ---- */
-            item.draggable = true;
-            item.addEventListener('dragstart', (e) => {
-                closeColorPop();
-                linkDrag = { widgetId: widget.id, linkIndex: li, el: item };
-                item.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', String(li));
-            });
-            item.addEventListener('dragend', () => {
-                item.classList.remove('dragging');
-                linkDrag = null;
-                clearLinkPh();
-                document.querySelectorAll('.link-item').forEach(el => el.classList.remove('drag-over'));
-            });
-            linkList.appendChild(item);
-        });
-
-        const addLinkBtn = document.createElement('button');
-        addLinkBtn.className = 'add-link-btn';
-        addLinkBtn.innerHTML = `<span>${escapeHtml(t('link.addLink'))}</span>`;
-        addLinkBtn.addEventListener('click', () => addLink(widget.id));
-        linkList.appendChild(addLinkBtn);
-
-        /* ---- Link drop zone（同一 widget 內重排） ---- */
-        linkList.addEventListener('dragover', (e) => {
-            if (!linkDrag || linkDrag.widgetId !== widget.id) return;
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            const before = getInsertBeforeEl(linkList, e.clientX, e.clientY);
-            const ph = getLinkPh();
-            if (before) linkList.insertBefore(ph, before);
-            else linkList.insertBefore(ph, addLinkBtn);
-        });
-        linkList.addEventListener('drop', (e) => {
-            if (!linkDrag || linkDrag.widgetId !== widget.id) return;
-            e.preventDefault();
-            const ph = linkPhEl;
-            if (!ph || ph.parentNode !== linkList) return;
-            /* 數 placeholder 前「非 placeholder、非被拖」嘅 link 數 = 新 index */
-            let idx = 0;
-            let node = ph.previousElementSibling;
-            while (node) {
-                if (!node.classList.contains('drop-ph') && node !== linkDrag.el) idx++;
-                node = node.previousElementSibling;
-            }
-            reorderLinks(widget.id, linkDrag.linkIndex, idx);
-            clearLinkPh();
-        });
-
-        body.appendChild(linkList);
         card.appendChild(header);
         card.appendChild(body);
         grid.appendChild(card);
@@ -2330,18 +2782,7 @@ function deletePage(index) {
    14. WIDGET CRUD
    ============================================================ */
 function addWidget() {
-    const title = prompt(t('widget.addWidget'), t('widget.newWidget'));
-    if (!title || !title.trim()) return;
-    const page = currentPage();
-    page.widgets.push({
-        id: uid('w'),
-        title: title.trim(),
-        view: data.settings.defaultView || 'list',
-        links: []
-    });
-    saveData();
-    renderWidgets();
-    toast(t('widget.added'));
+    showAddWidgetModal();
 }
 
 function renameWidget(widgetId) {
@@ -2563,6 +3004,29 @@ function bindSettings() {
         saveData();
     });
 
+    /* ---- Density ---- */
+    const densitySel = document.getElementById('densitySelect');
+    if (densitySel) densitySel.addEventListener('change', (e) => {
+        data.settings.density = e.target.value;
+        applyTheme();
+        saveData();
+    });
+
+    /* ---- Background mode / image ---- */
+    const bgModeSel = document.getElementById('bgModeSelect');
+    if (bgModeSel) bgModeSel.addEventListener('change', (e) => {
+        data.settings.bgMode = e.target.value;
+        applyTheme();
+        saveData();
+    });
+    const bgImgInput = document.getElementById('bgImageInput');
+    if (bgImgInput) bgImgInput.addEventListener('input', (e) => {
+        data.settings.bgImage = e.target.value.trim();
+        if (data.settings.bgMode !== 'custom') data.settings.bgMode = 'custom';
+        applyTheme();
+        saveData();
+    });
+
     document.getElementById('accentColorPicker').addEventListener('input', (e) => {
         data.settings.accentColor = e.target.value;
         applyTheme();
@@ -2657,13 +3121,8 @@ function bindSettings() {
 
 /** 正規化 + 渲染匯入嘅數據（冇 confirm；成功回傳 true） */
 function applyImportedDataCore(parsed) {
-    data = parsed;
+    data = normalizeData(parsed);
     if (!data.settings) data.settings = JSON.parse(JSON.stringify(DEFAULT_DATA.settings));
-    const def = DEFAULT_DATA.settings;
-    for (const k in def) if (data.settings[k] === undefined) data.settings[k] = def[k];
-    data.pages.forEach(p => (p.widgets || []).forEach(w => {
-        if (!w.view) w.view = 'list';
-    }));
     activePageIndex = 0;
     applyTheme();
     saveData();
@@ -2799,6 +3258,10 @@ function bindKeyboard() {
             e.preventDefault();
             document.getElementById('searchInput').focus();
         }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            openPalette();
+        }
         if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
             e.preventDefault();
             addPage();
@@ -2810,6 +3273,7 @@ function bindKeyboard() {
         if (e.key === 'Escape') {
             document.getElementById('modalOverlay').classList.remove('open');
             closeColorPop();
+            closePalette();
             scanStop();
         }
     });
@@ -3510,6 +3974,1065 @@ function showCodeSummary(content, closePrev, code, parsed) {
 }
 
 /* ============================================================
+   19d. 新 WIDGET 類型（crypto / weather / notes / todo / timer / mostvisited）
+   + command palette + 拖 URL 快速新增 + 瀏覽器書籤匯入 + density / 背景圖
+   ============================================================ */
+
+/* ---------- 小工具共用状态 ---------- */
+const widgetIntervals = {};   /* widgetId → setInterval（crypto/weather 輪詢） */
+const cryptoCache = {};       /* widgetId → { ts, rows, error } */
+const weatherCache = {};      /* widgetId → { ts, data, error } */
+const geoCache = {};          /* city → { lat, lon, name, ts } */
+const timerStates = {};       /* widgetId → { mode, remaining, running } */
+
+function clearWidgetIntervals() {
+    for (const id in widgetIntervals) {
+        clearInterval(widgetIntervals[id]);
+        delete widgetIntervals[id];
+    }
+}
+
+/** 依類型渲染 widget body */
+function renderWidgetBody(widget, body) {
+    switch (widget.type || 'links') {
+        case 'crypto': renderCryptoBody(widget, body); break;
+        case 'weather': renderWeatherBody(widget, body); break;
+        case 'notes': renderNotesBody(widget, body); break;
+        case 'todo': renderTodoBody(widget, body); break;
+        case 'timer': renderTimerBody(widget, body); break;
+        case 'mostvisited': renderMostVisitedBody(widget, body); break;
+        default: renderLinksBody(widget, body);
+    }
+}
+
+/** 局部刷新單個 widget 嘅 body（保留 state，唔重繪全頁） */
+function refreshWidgetBody(widgetId) {
+    const page = currentPage();
+    const widget = (page.widgets || []).find(w => w.id === widgetId);
+    if (!widget) return;
+    const card = document.querySelector(`.widget[data-widget-id="${widgetId}"]`);
+    if (!card) return;
+    const body = card.querySelector('.widget-body');
+    if (!body) return;
+    body.innerHTML = '';
+    renderWidgetBody(widget, body);
+    scheduleLayout();
+    setTimeout(scheduleLayout, 60);
+}
+
+/** 強制刷新數據型 widget（清快取 + 重繪） */
+function refreshWidget(widgetId) {
+    delete cryptoCache[widgetId];
+    delete weatherCache[widgetId];
+    refreshWidgetBody(widgetId);
+}
+
+function toggleWidgetCollapse(widgetId) {
+    const widget = currentPage().widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+    widget.collapsed = !widget.collapsed;
+    saveData();
+    const card = document.querySelector(`.widget[data-widget-id="${widgetId}"]`);
+    if (card) {
+        card.dataset.collapsed = widget.collapsed ? '1' : '0';
+        const btn = card.querySelector('[data-action="collapse"]');
+        if (btn) {
+            btn.textContent = widget.collapsed ? '▸' : '▾';
+            btn.title = t(widget.collapsed ? 'w.expand' : 'w.collapse');
+        }
+        scheduleLayout();
+        setTimeout(scheduleLayout, 60);
+    }
+}
+
+/* ---------- Favicon fallback + click 統計 ---------- */
+function avatarColor(seed) {
+    let h = 0;
+    for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    return `hsl(${h % 360}, 55%, 45%)`;
+}
+function attachFavicon(img, label) {
+    if (!img) return;
+    img.addEventListener('error', () => {
+        const s = document.createElement('span');
+        s.className = 'fav-fallback';
+        s.textContent = ((label || '?').trim().charAt(0) || '?').toUpperCase();
+        s.style.background = avatarColor(label || '?');
+        img.replaceWith(s);
+    }, { once: true });
+}
+let statsSaveTimer = null;
+function bumpClick(url) {
+    if (!url) return;
+    data.stats = data.stats || {};
+    data.stats[url] = (data.stats[url] || 0) + 1;
+    clearTimeout(statsSaveTimer);
+    statsSaveTimer = setTimeout(saveData, 1500);
+    const sel = `.link-item[data-url="${(window.CSS && CSS.escape) ? CSS.escape(url) : url.replace(/"/g, '\\"')}"] .link-count`;
+    document.querySelectorAll(sel).forEach(el => { el.textContent = '×' + data.stats[url]; });
+}
+
+/* ---------- 連結清單型 widget（原有功能 + click 統計 + favicon fallback） ---------- */
+function renderLinksBody(widget, body) {
+    const linkList = document.createElement('div');
+    linkList.className = 'link-list';
+
+    (widget.links || []).forEach((link, li) => {
+        const item = document.createElement('a');
+        item.className = 'link-item';
+        item.dataset.url = link.url;
+        item.href = link.url;
+        item.target = '_blank';
+        item.rel = 'noopener noreferrer';
+        const n = (data.stats || {})[link.url] || 0;
+        item.title = link.label + '  ·  ' + link.url + (n ? `  ·  ${t('link.clicks', { n })}` : '');
+        item.innerHTML = `
+            <img class="link-favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(getDomain(link.url))}&sz=64" alt="">
+            <span class="link-label">${escapeHtml(link.label)}</span>
+            ${n ? `<span class="link-count">×${n}</span>` : ''}
+            <span class="link-edit-actions">
+                <button data-action="edit-link" title="${escapeHtml(t('link.editTitle'))}">✏️</button>
+                <button data-action="delete-link" class="del" title="${escapeHtml(t('link.deleteConfirm', { name: link.label }))}">✕</button>
+            </span>
+        `;
+        attachFavicon(item.querySelector('.link-favicon'), link.label);
+        item.addEventListener('click', () => bumpClick(link.url));
+        item.querySelector('[data-action="edit-link"]').addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            editLink(widget.id, li);
+        });
+        item.querySelector('[data-action="delete-link"]').addEventListener('click', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            deleteLink(widget.id, li);
+        });
+
+        /* ---- Link drag-to-reorder ---- */
+        item.draggable = true;
+        item.addEventListener('dragstart', (e) => {
+            closeColorPop();
+            internalDrag = true;
+            linkDrag = { widgetId: widget.id, linkIndex: li, el: item };
+            item.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(li));
+        });
+        item.addEventListener('dragend', () => {
+            internalDrag = false;
+            item.classList.remove('dragging');
+            linkDrag = null;
+            clearLinkPh();
+            document.querySelectorAll('.link-item').forEach(el => el.classList.remove('drag-over'));
+        });
+        linkList.appendChild(item);
+    });
+
+    const addLinkBtn = document.createElement('button');
+    addLinkBtn.className = 'add-link-btn';
+    addLinkBtn.innerHTML = `<span>${escapeHtml(t('link.addLink'))}</span>`;
+    addLinkBtn.addEventListener('click', () => addLink(widget.id));
+    linkList.appendChild(addLinkBtn);
+
+    /* ---- Link drop zone（同一 widget 內重排） ---- */
+    linkList.addEventListener('dragover', (e) => {
+        if (!linkDrag || linkDrag.widgetId !== widget.id) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const before = getInsertBeforeEl(linkList, e.clientX, e.clientY);
+        const ph = getLinkPh();
+        if (before) linkList.insertBefore(ph, before);
+        else linkList.insertBefore(ph, addLinkBtn);
+    });
+    linkList.addEventListener('drop', (e) => {
+        if (!linkDrag || linkDrag.widgetId !== widget.id) return;
+        e.preventDefault();
+        const ph = linkPhEl;
+        if (!ph || ph.parentNode !== linkList) return;
+        /* 數 placeholder 前「非 placeholder、非被拖」嘅 link 數 = 新 index */
+        let idx = 0;
+        let node = ph.previousElementSibling;
+        while (node) {
+            if (!node.classList.contains('drop-ph') && node !== linkDrag.el) idx++;
+            node = node.previousElementSibling;
+        }
+        reorderLinks(widget.id, linkDrag.linkIndex, idx);
+        clearLinkPh();
+    });
+
+    body.appendChild(linkList);
+}
+
+/* ============================================================
+   19e. CRYPTO 報價 widget（CoinGecko 免費 API，免 key）
+   漲 = 紅、跌 = 綠（A股／幣圈習慣）
+   ============================================================ */
+const CRYPTO_SYMBOLS = {
+    bitcoin: 'BTC', ethereum: 'ETH', solana: 'SOL', dogecoin: 'DOGE', ripple: 'XRP',
+    cardano: 'ADA', binancecoin: 'BNB', tron: 'TRX', toncoin: 'TON', avalanche: 'AVAX',
+    chainlink: 'LINK', polkadot: 'DOT', litecoin: 'LTC', 'shiba-inu': 'SHIB', uniswap: 'UNI',
+    aptos: 'APT', sui: 'SUI', pepe: 'PEPE', near: 'NEAR', arbitrum: 'ARB', optimism: 'OP',
+    polygon: 'MATIC', stellar: 'XLM', hedera: 'HBAR', render: 'RENDER', 'filecoin': 'FIL'
+};
+function cryptoSym(id) {
+    if (CRYPTO_SYMBOLS[id]) return CRYPTO_SYMBOLS[id];
+    return id.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).slice(0, 6);
+}
+function fmtPrice(p) {
+    if (p == null || isNaN(p)) return '—';
+    if (p >= 1000) return p.toLocaleString('en-US', { maximumFractionDigits: 0 });
+    if (p >= 1) return p.toFixed(2);
+    if (p >= 0.01) return p.toFixed(4);
+    return p.toFixed(6);
+}
+async function fetchCrypto(widget, force) {
+    const c = cryptoCache[widget.id];
+    if (!force && c && Date.now() - c.ts < 55000) return c;
+    const ids = (widget.coins || []).map(s => String(s).trim().toLowerCase()).filter(Boolean);
+    if (!ids.length) {
+        cryptoCache[widget.id] = { ts: Date.now(), rows: [] };
+        return cryptoCache[widget.id];
+    }
+    try {
+        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids='
+            + encodeURIComponent(ids.join(',')) + '&vs_currencies=usd&include_24hr_change=true');
+        if (!res.ok) throw new Error('http ' + res.status);
+        const j = await res.json();
+        const rows = ids.filter(id => j[id]).map(id => ({ id, price: j[id].usd, chg: j[id].usd_24h_change }));
+        cryptoCache[widget.id] = { ts: Date.now(), rows };
+    } catch (e) {
+        cryptoCache[widget.id] = { ts: Date.now(), rows: c ? c.rows : [], error: true };
+    }
+    return cryptoCache[widget.id];
+}
+function renderCryptoBody(widget, body) {
+    const box = document.createElement('div');
+    box.className = 'dw';
+    box.innerHTML = `<div class="dw-loading">${escapeHtml(t('crypto.loading'))}</div>`;
+    body.appendChild(box);
+
+    const paint = (st) => {
+        if (!st.rows.length) {
+            box.innerHTML = st.error
+                ? `<div class="dw-error">${escapeHtml(t('crypto.error'))}</div>`
+                : `<div class="dw-empty">${escapeHtml(t('crypto.empty'))}</div>`;
+        } else {
+            box.innerHTML = st.rows.map(r => {
+                const up = (r.chg == null ? 0 : r.chg) >= 0;
+                const chgTxt = r.chg == null ? '' :
+                    `<span class="dw-chg ${up ? 'dw-up' : 'dw-down'}">${up ? '▲' : '▼'} ${Math.abs(r.chg).toFixed(2)}%</span>`;
+                return `<div class="dw-row">
+                    <span class="dw-name"><span class="dw-sym">${escapeHtml(cryptoSym(r.id))}</span><span class="dw-id">${escapeHtml(r.id)}</span></span>
+                    <span class="dw-right"><span class="dw-price">$${fmtPrice(r.price)}</span>${chgTxt}</span>
+                </div>`;
+            }).join('') + (st.error ? `<div class="dw-error" style="padding:6px 0 0">${escapeHtml(t('crypto.stale'))}</div>` : '');
+        }
+        scheduleLayout();
+    };
+    fetchCrypto(widget).then(paint);
+    widgetIntervals[widget.id] = setInterval(() => fetchCrypto(widget).then(paint), 60000);
+}
+
+/* ============================================================
+   19f. 天氣 widget（Open-Meteo 免費 API，免 key）
+   ============================================================ */
+const WX_EMOJI = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',56:'🌧️',57:'🌧️',61:'🌦️',63:'🌧️',65:'🌧️',66:'🌧️',67:'🌧️',71:'🌨️',73:'🌨️',75:'❄️',77:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',85:'🌨️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️' };
+const WX_ZH = { 0:'晴',1:'大致晴',2:'多雲',3:'陰',45:'有霧',48:'有霧',51:'微毛毛雨',53:'毛毛雨',55:'大毛毛雨',56:'凍毛毛雨',57:'密凍毛毛雨',61:'微雨',63:'有雨',65:'大雨',66:'凍雨',67:'大凍雨',71:'微雪',73:'有雪',75:'大雪',77:'雪粒',80:'微驟雨',81:'驟雨',82:'大驟雨',85:'微雪',86:'大雪',95:'雷暴',96:'雷暴',99:'雷暴' };
+const WX_EN = { 0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',56:'Freezing drizzle',57:'Freezing drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',66:'Freezing rain',67:'Freezing rain',71:'Light snow',73:'Snow',75:'Heavy snow',77:'Snow grains',80:'Light showers',81:'Showers',82:'Heavy showers',85:'Snow showers',86:'Snow showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm' };
+
+function wxDesc(code) {
+    return (data.settings.lang === 'en') ? (WX_EN[code] || '') : (WX_ZH[code] || '');
+}
+async function geocodeCity(city) {
+    const key = String(city || '').trim().toLowerCase();
+    const c = geoCache[key];
+    if (c && Date.now() - c.ts < 7 * 864e5) return c;
+    const lang = (data.settings.lang === 'en') ? 'en' : 'zh';
+    const res = await fetch('https://geocoding-api.open-meteo.com/v1/search?name='
+        + encodeURIComponent(city) + '&count=1&language=' + lang);
+    const j = await res.json();
+    if (!j.results || !j.results.length) throw new Error('city not found');
+    const r = j.results[0];
+    const g = { lat: r.latitude, lon: r.longitude, name: r.name, ts: Date.now() };
+    geoCache[key] = g;
+    return g;
+}
+async function fetchWeather(widget, force) {
+    const c = weatherCache[widget.id];
+    if (!force && c && Date.now() - c.ts < 600000) return c;
+    try {
+        const g = await geocodeCity(widget.city || 'Macau');
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude='
+            + g.lat + '&longitude=' + g.lon
+            + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m'
+            + '&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1');
+        if (!res.ok) throw new Error('http ' + res.status);
+        const j = await res.json();
+        weatherCache[widget.id] = {
+            ts: Date.now(),
+            data: {
+                city: g.name,
+                temp: j.current.temperature_2m,
+                feels: j.current.apparent_temperature,
+                humidity: j.current.relative_humidity_2m,
+                wind: j.current.wind_speed_10m,
+                code: j.current.weather_code,
+                max: j.daily.temperature_2m_max[0],
+                min: j.daily.temperature_2m_min[0]
+            }
+        };
+    } catch (e) {
+        weatherCache[widget.id] = {
+            ts: Date.now(),
+            data: c ? c.data : null,
+            error: (e.message === 'city not found') ? 'city' : true
+        };
+    }
+    return weatherCache[widget.id];
+}
+function renderWeatherBody(widget, body) {
+    const box = document.createElement('div');
+    box.className = 'dw';
+    box.innerHTML = `<div class="dw-loading">${escapeHtml(t('weather.loading'))}</div>`;
+    body.appendChild(box);
+
+    const paint = (st) => {
+        if (!st.data) {
+            box.innerHTML = `<div class="dw-error">${escapeHtml(st.error === 'city' ? t('weather.cityNotFound') : t('weather.error'))}</div>`;
+        } else {
+            const d = st.data;
+            box.innerHTML = `
+                <div class="wx-main">
+                    <span class="wx-icon">${WX_EMOJI[d.code] || '🌡️'}</span>
+                    <span>
+                        <span class="wx-temp">${Math.round(d.temp)}°</span>
+                        <span class="wx-desc">${escapeHtml(wxDesc(d.code))}</span><br>
+                        <span class="wx-city">${escapeHtml(d.city)}</span>
+                    </span>
+                </div>
+                <div class="wx-meta">
+                    <span>${escapeHtml(t('weather.today'))} <b>${Math.round(d.min)}° / ${Math.round(d.max)}°</b></span>
+                    <span>${escapeHtml(t('weather.feels'))} <b>${Math.round(d.feels)}°</b></span>
+                    <span>${escapeHtml(t('weather.humidity'))} <b>${d.humidity}%</b></span>
+                    <span>${escapeHtml(t('weather.wind'))} <b>${Math.round(d.wind)} km/h</b></span>
+                </div>`;
+        }
+        scheduleLayout();
+    };
+    fetchWeather(widget).then(paint);
+    widgetIntervals[widget.id] = setInterval(() => fetchWeather(widget).then(paint), 600000);
+}
+
+/* ============================================================
+   19g. 便簽 / 待辦 / 計時器 widget（純本地，零 API）
+   ============================================================ */
+let notesSaveTimer = null;
+function renderNotesBody(widget, body) {
+    const ta = document.createElement('textarea');
+    ta.className = 'note-area';
+    ta.placeholder = t('notes.placeholder');
+    ta.value = widget.text || '';
+    ta.addEventListener('input', () => {
+        widget.text = ta.value;
+        clearTimeout(notesSaveTimer);
+        notesSaveTimer = setTimeout(saveData, 400);
+    });
+    body.appendChild(ta);
+}
+
+function renderTodoBody(widget, body) {
+    widget.items = widget.items || [];
+    const list = document.createElement('div');
+    list.className = 'todo-list';
+
+    const paint = () => {
+        list.innerHTML = '';
+        if (!widget.items.length) {
+            list.innerHTML = `<div class="dw-empty">${escapeHtml(t('todo.empty'))}</div>`;
+        } else {
+            widget.items.forEach((it, i) => {
+                const row = document.createElement('label');
+                row.className = 'todo-item' + (it.done ? ' done' : '');
+                row.innerHTML = `
+                    <input type="checkbox" ${it.done ? 'checked' : ''}>
+                    <span class="todo-text">${escapeHtml(it.text)}</span>
+                    <button class="todo-del" title="${escapeHtml(t('link.deleteConfirm', { name: it.text }))}">✕</button>`;
+                row.querySelector('input').addEventListener('change', (e) => {
+                    widget.items[i].done = e.target.checked;
+                    saveData(); paint();
+                });
+                row.querySelector('.todo-del').addEventListener('click', () => {
+                    widget.items.splice(i, 1);
+                    saveData(); paint();
+                });
+                list.appendChild(row);
+            });
+        }
+        foot.querySelector('.todo-count').textContent =
+            t('todo.progress', { done: widget.items.filter(i => i.done).length, total: widget.items.length });
+        scheduleLayout();
+    };
+
+    const add = document.createElement('div');
+    add.className = 'todo-add';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = t('todo.placeholder');
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn btn-primary';
+    addBtn.textContent = t('todo.add');
+    const push = () => {
+        const v = input.value.trim();
+        if (!v) return;
+        widget.items.push({ id: uid('t'), text: v, done: false });
+        input.value = '';
+        saveData(); paint();
+    };
+    addBtn.addEventListener('click', push);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') push(); });
+    add.appendChild(input);
+    add.appendChild(addBtn);
+
+    const foot = document.createElement('div');
+    foot.className = 'todo-foot';
+    const cnt = document.createElement('span');
+    cnt.className = 'todo-count';
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'todo-clear';
+    clearBtn.textContent = t('todo.clearDone');
+    clearBtn.addEventListener('click', () => {
+        widget.items = widget.items.filter(i => !i.done);
+        saveData(); paint();
+    });
+    foot.appendChild(cnt);
+    foot.appendChild(clearBtn);
+
+    paint();
+    body.appendChild(list);
+    body.appendChild(add);
+    body.appendChild(foot);
+}
+
+const TIMER_MODES = {
+    pomodoro: { m: 25, key: 'timer.pomodoro' },
+    short: { m: 5, key: 'timer.short' },
+    long: { m: 15, key: 'timer.long' }
+};
+function fmtTime(sec) {
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+function renderTimerBody(widget, body) {
+    if (!timerStates[widget.id]) {
+        timerStates[widget.id] = { mode: 'pomodoro', remaining: TIMER_MODES.pomodoro.m * 60, running: false };
+    }
+    const st = timerStates[widget.id];
+    const box = document.createElement('div');
+    box.className = 'tmr';
+    box.innerHTML = `
+        <div class="tmr-modes">
+            ${Object.entries(TIMER_MODES).map(([k, m]) =>
+                `<button class="tmr-mode${st.mode === k ? ' active' : ''}" data-mode="${k}">${escapeHtml(t(m.key))}</button>`).join('')}
+        </div>
+        <div class="tmr-time${st.running ? ' running' : ''}" data-tmr="${widget.id}">${fmtTime(st.remaining)}</div>
+        <div class="tmr-ctrl">
+            <button class="btn btn-primary" data-act="toggle">${escapeHtml(t(st.running ? 'timer.pause' : 'timer.start'))}</button>
+            <button class="btn" data-act="reset">${escapeHtml(t('timer.reset'))}</button>
+        </div>`;
+    box.querySelectorAll('.tmr-mode').forEach(btn => {
+        btn.addEventListener('click', () => {
+            st.mode = btn.dataset.mode;
+            st.remaining = TIMER_MODES[st.mode].m * 60;
+            st.running = false;
+            refreshWidgetBody(widget.id);
+        });
+    });
+    const toggleBtn = box.querySelector('[data-act="toggle"]');
+    const timeEl = box.querySelector('[data-tmr]');
+    toggleBtn.addEventListener('click', () => {
+        st.running = !st.running;
+        toggleBtn.textContent = t(st.running ? 'timer.pause' : 'timer.start');
+        timeEl.classList.toggle('running', st.running);
+        if (st.running) startTimerTick();
+    });
+    box.querySelector('[data-act="reset"]').addEventListener('click', () => {
+        st.running = false;
+        st.remaining = TIMER_MODES[st.mode].m * 60;
+        toggleBtn.textContent = t('timer.start');
+        timeEl.textContent = fmtTime(st.remaining);
+        timeEl.classList.remove('running');
+    });
+    body.appendChild(box);
+}
+let timerTickId = null;
+function startTimerTick() {
+    if (timerTickId) return;
+    timerTickId = setInterval(() => {
+        for (const id in timerStates) {
+            const st = timerStates[id];
+            if (!st.running || st.remaining <= 0) continue;
+            st.remaining--;
+            const el = document.querySelector(`[data-tmr="${id}"]`);
+            if (el) el.textContent = fmtTime(st.remaining);
+            if (st.remaining <= 0) {
+                st.running = false;
+                toast(t('timer.done'));
+                beep();
+                refreshWidgetBody(id);
+            }
+        }
+    }, 1000);
+}
+function beep() {
+    try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 880;
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + 0.55);
+    } catch (e) { /* ignore */ }
+}
+
+/* ============================================================
+   19h. 最常用書籤 widget（由 click 統計自動生成）
+   ============================================================ */
+function prettyUrlLabel(url) {
+    try {
+        const u = new URL(url);
+        return u.hostname.replace(/^www\./, '') + (u.pathname === '/' ? '' : u.pathname);
+    } catch { return url; }
+}
+function renderMostVisitedBody(widget, body) {
+    const entries = Object.entries(data.stats || {})
+        .filter(([u]) => /^https?:\/\//i.test(u))
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, widget.limit || 12);
+    if (!entries.length) {
+        body.innerHTML = `<div class="dw-empty">${escapeHtml(t('mv.empty'))}</div>`;
+        return;
+    }
+    const list = document.createElement('div');
+    list.className = 'link-list';
+    entries.forEach(([url, n], i) => {
+        const label = prettyUrlLabel(url);
+        const item = document.createElement('a');
+        item.className = 'link-item';
+        item.dataset.url = url;
+        item.href = url;
+        item.target = '_blank';
+        item.rel = 'noopener noreferrer';
+        item.title = url + '  ·  ' + t('link.clicks', { n });
+        item.innerHTML = `
+            <span class="mv-rank">${i + 1}</span>
+            <img class="link-favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(getDomain(url))}&sz=64" alt="">
+            <span class="link-label">${escapeHtml(label)}</span>
+            <span class="link-count">×${n}</span>`;
+        attachFavicon(item.querySelector('.link-favicon'), label);
+        item.addEventListener('click', () => bumpClick(url));
+        list.appendChild(item);
+    });
+    body.appendChild(list);
+}
+
+/* ============================================================
+   19i. COMMAND PALETTE（Ctrl+Shift+K）
+   ============================================================ */
+const cmdk = { items: [], active: 0 };
+function collectPaletteItems() {
+    const items = [];
+    data.pages.forEach((p) => (p.widgets || []).forEach(w => {
+        if (w.type && w.type !== 'links' && w.type !== 'mostvisited') return;
+        (w.links || []).forEach(l => items.push({
+            kind: 'link', ico: '🔗', txt: l.label, sub: getDomain(l.url), url: l.url
+        }));
+    }));
+    Object.entries(data.stats || {})
+        .filter(([u]) => /^https?:\/\//i.test(u))
+        .sort((a, b) => b[1] - a[1]).slice(0, 30)
+        .forEach(([url, n]) => items.push({
+            kind: 'link', ico: '🔗', txt: prettyUrlLabel(url), sub: getDomain(url) + ' ×' + n, url
+        }));
+    data.pages.forEach((p, i) => items.push({
+        kind: 'action', ico: '📄', txt: p.name, sub: t('palette.pages'),
+        run: () => { activePageIndex = i; renderAll(); }
+    }));
+    Object.keys(THEMES).forEach(k => items.push({
+        kind: 'action', ico: '🎨', txt: t('theme.' + k), sub: t('palette.themes'),
+        run: () => {
+            data.settings.theme = k;
+            const th = THEMES[k];
+            if (th) {
+                data.settings.accentColor = th.vars['--accent'];
+                data.settings.bgColor = th.vars['--bg'];
+            }
+            applyTheme(); saveData();
+        }
+    }));
+    ['compact', 'cozy', 'spacious'].forEach(d => items.push({
+        kind: 'action', ico: '📐', txt: t('density.' + d), sub: t('palette.density'),
+        run: () => { data.settings.density = d; applyTheme(); saveData(); }
+    }));
+    items.push({ kind: 'action', ico: '➕', txt: t('palette.addWidget'), sub: t('palette.actions'), run: () => showAddWidgetModal() });
+    items.push({ kind: 'action', ico: '📄', txt: t('palette.addPage'), sub: t('palette.actions'), run: () => addPage() });
+    items.push({
+        kind: 'action', ico: '⚙️', txt: t('palette.settings'), sub: t('palette.actions'),
+        run: () => document.getElementById('settingsPanel').classList.add('open')
+    });
+    return items;
+}
+function cmdkFilter(q) {
+    const all = collectPaletteItems();
+    const query = (q || '').trim().toLowerCase();
+    if (!query) return all.slice(0, 60);
+    return all.map(it => {
+        const hay = ((it.txt || '') + ' ' + (it.sub || '') + ' ' + (it.url || '')).toLowerCase();
+        const idx = hay.indexOf(query);
+        if (idx < 0) return null;
+        return { it, score: idx + (it.kind === 'link' ? 0 : 60) };
+    }).filter(Boolean).sort((a, b) => a.score - b.score).map(x => x.it).slice(0, 60);
+}
+function paintPalette() {
+    const list = document.getElementById('cmdkList');
+    if (!list) return;
+    if (!cmdk.items.length) {
+        list.innerHTML = `<div class="cmdk-empty">${escapeHtml(t('palette.noResults'))}</div>`;
+        return;
+    }
+    let html = '', lastGroup = '';
+    cmdk.items.forEach((it, i) => {
+        const group = it.kind === 'link' ? t('palette.links') : t('palette.actions');
+        if (group !== lastGroup) {
+            html += `<div class="cmdk-group">${escapeHtml(group)}</div>`;
+            lastGroup = group;
+        }
+        html += `<div class="cmdk-item${i === cmdk.active ? ' active' : ''}" data-i="${i}">
+            <span class="cmdk-ico">${it.ico || '•'}</span>
+            <span class="cmdk-txt">${escapeHtml(it.txt || '')}</span>
+            <span class="cmdk-sub">${escapeHtml(it.sub || '')}</span>
+        </div>`;
+    });
+    list.innerHTML = html;
+    list.querySelectorAll('.cmdk-item').forEach(el => {
+        el.addEventListener('click', () => cmdkRun(Number(el.dataset.i)));
+        el.addEventListener('mousemove', () => {
+            const i = Number(el.dataset.i);
+            if (i !== cmdk.active) { cmdk.active = i; paintPalette(); }
+        });
+    });
+    const act = list.querySelector('.cmdk-item.active');
+    if (act) act.scrollIntoView({ block: 'nearest' });
+}
+function cmdkRun(i) {
+    const it = cmdk.items[i];
+    if (!it) return;
+    closePalette();
+    if (it.kind === 'link') {
+        bumpClick(it.url);
+        window.open(it.url, '_blank', 'noopener');
+    } else {
+        it.run();
+    }
+}
+function openPalette() {
+    cmdk.items = cmdkFilter('');
+    cmdk.active = 0;
+    const ov = document.getElementById('cmdkOverlay');
+    const input = document.getElementById('cmdkInput');
+    ov.classList.add('open');
+    input.value = '';
+    paintPalette();
+    setTimeout(() => input.focus(), 30);
+}
+function closePalette() {
+    document.getElementById('cmdkOverlay').classList.remove('open');
+}
+function bindPalette() {
+    const ov = document.getElementById('cmdkOverlay');
+    const input = document.getElementById('cmdkInput');
+    input.addEventListener('input', () => {
+        cmdk.items = cmdkFilter(input.value);
+        cmdk.active = 0;
+        paintPalette();
+    });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); cmdk.active = Math.min(cmdk.active + 1, cmdk.items.length - 1); paintPalette(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); cmdk.active = Math.max(cmdk.active - 1, 0); paintPalette(); }
+        else if (e.key === 'Enter') { e.preventDefault(); cmdkRun(cmdk.active); }
+        else if (e.key === 'Escape') { e.preventDefault(); closePalette(); }
+    });
+    ov.addEventListener('click', (e) => { if (e.target === ov) closePalette(); });
+    document.getElementById('paletteBtn').addEventListener('click', openPalette);
+}
+
+/* ============================================================
+   19j. 拖 URL 落入頁 → 快速新增書籤
+   ============================================================ */
+function pickUrlFromDrop(e) {
+    if (internalDrag || !e.dataTransfer) return null;
+    const uriList = (e.dataTransfer.getData('text/uri-list') || '').trim();
+    const plain = (e.dataTransfer.getData('text/plain') || '').trim();
+    const url = (uriList || plain).split(/\s+/)[0];
+    if (!/^https?:\/\//i.test(url)) return null;
+    let label = '';
+    const firstLine = plain.split('\n')[0].trim();
+    if (firstLine && !/^https?:\/\//i.test(firstLine)) label = firstLine;
+    if (!label) label = prettyUrlLabel(url);
+    return { url, label };
+}
+function addLinkToWidget(widgetId, url, label, silent) {
+    const widget = currentPage().widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+    if (!widget.links) widget.links = [];
+    if (widget.links.some(l => l.url === url)) {
+        if (!silent) toast(t('link.added'));
+        return;
+    }
+    widget.links.push({ label: label || prettyUrlLabel(url), url });
+    saveData();
+    renderWidgets();
+    if (!silent) toast(t('qa.added'));
+}
+function quickAddModal(url, label) {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    const page = currentPage();
+    const opts = page.widgets.filter(w => !w.type || w.type === 'links')
+        .map(w => `<option value="${w.id}">${escapeHtml(w.title)}</option>`).join('');
+    content.innerHTML = `
+        <h3>${escapeHtml(t('qa.title'))}</h3>
+        <div class="form-group">
+            <label>${escapeHtml(t('link.label'))}</label>
+            <input type="text" id="qaLabel" value="${escapeHtml(label)}">
+        </div>
+        <div class="form-group">
+            <label>${escapeHtml(t('link.url'))}</label>
+            <input type="text" id="qaUrl" value="${escapeHtml(url)}">
+        </div>
+        <div class="form-group">
+            <label>${escapeHtml(t('qa.widget'))}</label>
+            <select id="qaWidget" style="width:100%">
+                ${opts}
+                <option value="__new__">${escapeHtml(t('qa.newWidget'))}</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" id="qaCancel">${escapeHtml(t('link.cancel'))}</button>
+            <button class="btn btn-primary" id="qaSave">${escapeHtml(t('link.save'))}</button>
+        </div>`;
+    overlay.classList.add('open');
+
+    const close = () => {
+        overlay.classList.remove('open');
+        overlay.removeEventListener('click', onOverlayClick);
+        content.removeEventListener('keydown', onKeydown);
+    };
+    const onOverlayClick = (e) => { if (e.target === overlay) close(); };
+    const onKeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        if (e.key === 'Escape') close();
+    };
+    const save = () => {
+        const l = document.getElementById('qaLabel').value.trim();
+        let u = document.getElementById('qaUrl').value.trim();
+        if (!l || !u) { toast(t('link.required')); return; }
+        if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+        const wsel = document.getElementById('qaWidget').value;
+        if (wsel === '__new__') {
+            const nw = {
+                id: uid('w'), title: getDomain(u) || 'Bookmarks', type: 'links',
+                view: data.settings.defaultView || 'list', links: [{ label: l, url: u }]
+            };
+            page.widgets.push(nw);
+        } else {
+            addLinkToWidget(wsel, u, l, true);
+        }
+        saveData();
+        renderWidgets();
+        toast(t('qa.added'));
+        close();
+    };
+    document.getElementById('qaCancel').addEventListener('click', close);
+    document.getElementById('qaSave').addEventListener('click', save);
+    overlay.addEventListener('click', onOverlayClick);
+    content.addEventListener('keydown', onKeydown);
+    setTimeout(() => document.getElementById('qaLabel')?.focus(), 50);
+}
+function bindUrlDrop() {
+    const ov = document.getElementById('dropUrlOverlay');
+    const card = document.getElementById('dropUrlCard');
+    let depth = 0;
+    const hasUrlType = (dt) => {
+        const types = Array.from((dt && dt.types) || []);
+        return types.includes('text/uri-list') || types.includes('text/plain');
+    };
+    window.addEventListener('dragenter', (e) => {
+        if (internalDrag || !hasUrlType(e.dataTransfer)) return;
+        e.preventDefault();
+        depth++;
+        card.textContent = t('qa.title');
+        ov.classList.add('show');
+    });
+    window.addEventListener('dragover', (e) => {
+        if (internalDrag || !hasUrlType(e.dataTransfer)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+    });
+    window.addEventListener('dragleave', () => {
+        depth = Math.max(0, depth - 1);
+        if (!depth) ov.classList.remove('show');
+    });
+    window.addEventListener('drop', (e) => {
+        ov.classList.remove('show');
+        depth = 0;
+        if (internalDrag) return;
+        const picked = pickUrlFromDrop(e);
+        if (picked) {
+            e.preventDefault();
+            quickAddModal(picked.url, picked.label);
+        }
+    });
+}
+
+/* ============================================================
+   19k. 匯入瀏覽器書籤（Netscape bookmarks.html）
+   ============================================================ */
+function parseBookmarksHtml(text) {
+    const doc = new DOMParser().parseFromString(text, 'text/html');
+    const items = [];
+    let folder = '';
+    doc.body.querySelectorAll('h3, a').forEach(el => {
+        if (el.tagName === 'H3') {
+            folder = (el.textContent || '').trim();
+        } else {
+            const url = el.getAttribute('href');
+            const label = (el.textContent || '').trim();
+            if (url && /^https?:\/\//i.test(url)) items.push({ folder, label, url });
+        }
+    });
+    return items;
+}
+function importBookmarksText(text) {
+    let items = [];
+    try { items = parseBookmarksHtml(text); } catch (e) { items = []; }
+    if (!items.length) { toast(t('bm.noLinks')); return; }
+    const seen = new Set();
+    items = items.filter(it => {
+        const k = it.folder + '|' + it.url;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+    });
+    const folders = [...new Set(items.map(i => i.folder))];
+    if (!confirm(t('bm.summary', { folders: folders.length, links: items.length }))) return;
+
+    const widgets = folders.map(f => ({
+        id: uid('w'),
+        title: f || t('bm.pageName'),
+        type: 'links',
+        view: 'list',
+        links: items.filter(i => i.folder === f)
+            .map(i => ({ label: i.label || prettyUrlLabel(i.url), url: i.url }))
+    }));
+    data.pages.push({ id: uid('page'), name: t('bm.pageName'), widgets });
+    activePageIndex = data.pages.length - 1;
+    saveData();
+    renderAll();
+    toast(t('bm.imported', { folders: folders.length, links: items.length }));
+}
+function bindBookmarksImport() {
+    document.getElementById('importBmBtn').addEventListener('click', () => {
+        document.getElementById('importBmInput').click();
+    });
+    document.getElementById('importBmInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => importBookmarksText(ev.target.result);
+        reader.readAsText(file);
+        e.target.value = '';
+    });
+}
+
+/* ============================================================
+   19l. 新增／編輯小工具 modal（標題 + 類型 + 類型參數）
+   ============================================================ */
+const WIDGET_TYPE_ORDER = ['links', 'crypto', 'weather', 'notes', 'todo', 'timer', 'mostvisited'];
+function showAddWidgetModal() {
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+    content.innerHTML = `
+        <h3>${escapeHtml(t('addWidget.title'))}</h3>
+        <div class="form-group">
+            <label>${escapeHtml(t('widget.addWidget'))}</label>
+            <input type="text" id="awTitle" value="${escapeHtml(t('widget.newWidget'))}">
+        </div>
+        <div class="form-group">
+            <label>${escapeHtml(t('addWidget.type'))}</label>
+            <select id="awType" style="width:100%">
+                ${WIDGET_TYPE_ORDER.map(ty => `<option value="${ty}">${escapeHtml(t('widgetType.' + ty))}</option>`).join('')}
+            </select>
+        </div>
+        <div class="form-group" id="awExtra" style="display:none">
+            <label id="awExtraLabel"></label>
+            <input type="text" id="awExtraInput">
+            <div class="settings-hint" id="awExtraHint"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn" id="awCancel">${escapeHtml(t('link.cancel'))}</button>
+            <button class="btn btn-primary" id="awSave">${escapeHtml(t('common.addWidget'))}</button>
+        </div>`;
+    overlay.classList.add('open');
+
+    const extraFor = (ty) => {
+        if (ty === 'crypto') return { label: t('crypto.coinsLabel'), value: 'bitcoin, ethereum, solana', hint: t('crypto.coinsHint') };
+        if (ty === 'weather') return { label: t('weather.cityLabel'), value: 'Macau', hint: t('weather.cityHint') };
+        return null;
+    };
+    const typeSel = document.getElementById('awType');
+    const extraBox = document.getElementById('awExtra');
+    const extraLabel = document.getElementById('awExtraLabel');
+    const extraInput = document.getElementById('awExtraInput');
+    const extraHint = document.getElementById('awExtraHint');
+    const syncExtra = () => {
+        const ex = extraFor(typeSel.value);
+        if (ex) {
+            extraBox.style.display = '';
+            extraLabel.textContent = ex.label;
+            extraInput.value = ex.value;
+            extraHint.textContent = ex.hint;
+        } else {
+            extraBox.style.display = 'none';
+        }
+    };
+    typeSel.addEventListener('change', syncExtra);
+    syncExtra();
+
+    const close = () => {
+        overlay.classList.remove('open');
+        overlay.removeEventListener('click', onOverlayClick);
+        content.removeEventListener('keydown', onKeydown);
+    };
+    const onOverlayClick = (e) => { if (e.target === overlay) close(); };
+    const onKeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        if (e.key === 'Escape') close();
+    };
+    const save = () => {
+        const title = document.getElementById('awTitle').value.trim() || t('widget.newWidget');
+        const type = typeSel.value;
+        const w = { id: uid('w'), title, type };
+        if (type === 'links') {
+            w.view = data.settings.defaultView || 'list';
+            w.links = [];
+        } else if (type === 'crypto') {
+            w.coins = extraInput.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+            if (!w.coins.length) w.coins = ['bitcoin', 'ethereum', 'solana'];
+        } else if (type === 'weather') {
+            w.city = extraInput.value.trim() || 'Macau';
+        } else if (type === 'todo') {
+            w.items = [];
+        } else if (type === 'mostvisited') {
+            w.limit = 12;
+        }
+        currentPage().widgets.push(w);
+        saveData();
+        renderWidgets();
+        toast(t('widget.added'));
+        close();
+    };
+    document.getElementById('awCancel').addEventListener('click', close);
+    document.getElementById('awSave').addEventListener('click', save);
+    overlay.addEventListener('click', onOverlayClick);
+    content.addEventListener('keydown', onKeydown);
+    setTimeout(() => document.getElementById('awTitle')?.focus(), 50);
+}
+
+/** 非連結型 widget 按 ✏️ → 編輯標題 + 類型參數 */
+function editWidgetConfig(widgetId) {
+    const widget = currentPage().widgets.find(w => w.id === widgetId);
+    if (!widget) return;
+    const type = widget.type || 'links';
+    const overlay = document.getElementById('modalOverlay');
+    const content = document.getElementById('modalContent');
+
+    let extraHtml = '';
+    if (type === 'crypto') {
+        extraHtml = `
+            <div class="form-group">
+                <label>${escapeHtml(t('crypto.coinsLabel'))}</label>
+                <input type="text" id="ewExtra" value="${escapeHtml((widget.coins || []).join(', '))}">
+                <div class="settings-hint">${escapeHtml(t('crypto.coinsHint'))}</div>
+            </div>`;
+    } else if (type === 'weather') {
+        extraHtml = `
+            <div class="form-group">
+                <label>${escapeHtml(t('weather.cityLabel'))}</label>
+                <input type="text" id="ewExtra" value="${escapeHtml(widget.city || '')}">
+                <div class="settings-hint">${escapeHtml(t('weather.cityHint'))}</div>
+            </div>`;
+    } else if (type === 'mostvisited') {
+        extraHtml = `
+            <div class="form-group">
+                <label>${escapeHtml(t('addWidget.type'))}</label>
+                <input type="number" id="ewLimit" min="3" max="50" value="${widget.limit || 12}">
+            </div>`;
+    }
+
+    content.innerHTML = `
+        <h3>${escapeHtml(t('widget.rename'))}</h3>
+        <div class="form-group">
+            <label>${escapeHtml(t('widget.addWidget'))}</label>
+            <input type="text" id="ewTitle" value="${escapeHtml(widget.title)}">
+        </div>
+        ${extraHtml}
+        <div class="modal-actions">
+            <button class="btn" id="ewCancel">${escapeHtml(t('link.cancel'))}</button>
+            <button class="btn btn-primary" id="ewSave">${escapeHtml(t('link.save'))}</button>
+        </div>`;
+    overlay.classList.add('open');
+
+    const close = () => {
+        overlay.classList.remove('open');
+        overlay.removeEventListener('click', onOverlayClick);
+        content.removeEventListener('keydown', onKeydown);
+    };
+    const onOverlayClick = (e) => { if (e.target === overlay) close(); };
+    const onKeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); save(); }
+        if (e.key === 'Escape') close();
+    };
+    const save = () => {
+        const title = document.getElementById('ewTitle').value.trim();
+        if (title) widget.title = title;
+        if (type === 'crypto') {
+            const coins = document.getElementById('ewExtra').value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+            if (coins.length) { widget.coins = coins; delete cryptoCache[widgetId]; }
+        } else if (type === 'weather') {
+            const city = document.getElementById('ewExtra').value.trim();
+            if (city) { widget.city = city; delete weatherCache[widgetId]; }
+        } else if (type === 'mostvisited') {
+            widget.limit = Math.max(3, Math.min(50, Number(document.getElementById('ewLimit').value) || 12));
+        }
+        saveData();
+        renderWidgets();
+        toast(t('widget.renamed'));
+        close();
+    };
+    document.getElementById('ewCancel').addEventListener('click', close);
+    document.getElementById('ewSave').addEventListener('click', save);
+    overlay.addEventListener('click', onOverlayClick);
+    content.addEventListener('keydown', onKeydown);
+    setTimeout(() => document.getElementById('ewTitle')?.focus(), 50);
+}
+
+/* ============================================================
    20. UTILS
    ============================================================ */
 function escapeHtml(str) {
@@ -3530,12 +5053,21 @@ function init() {
     bindAddWidget();
     bindKeyboard();
     bindXferUI();
+    bindPalette();
+    bindUrlDrop();
+    bindBookmarksImport();
+    startTimerTick();
     renderAll();
     updateClock();
     setInterval(updateClock, 30000);
     handleXferHash();
     /* 已開住個頁時掃碼（hash-only 切換）都要處理 */
     window.addEventListener('hashchange', handleXferHash);
+
+    /* PWA：註冊 service worker（離線用；http(s) 環境先有效） */
+    if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+        navigator.serviceWorker.register('sw.js').catch(() => { /* file:// 或舊瀏覽器：靜默失敗 */ });
+    }
 
     let resizeTimer;
     window.addEventListener('resize', () => {
