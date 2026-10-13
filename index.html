@@ -225,7 +225,7 @@
 
         /* ===== Main Content ===== */
         .content {
-            padding: 20px 24px 60px;
+            padding: 14px 24px 48px;
             max-width: 1600px;
             margin: 0 auto;
         }
@@ -276,7 +276,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 16px 10px;
+            padding: 10px 16px 8px;
             cursor: grab;
             user-select: none;
         }
@@ -318,7 +318,7 @@
         .widget-action:hover { background: var(--surface-hover); color: var(--text); }
         .widget-action.delete:hover { color: #ff6b6b; }
 
-        .widget-body { padding: 0 16px 16px; }
+        .widget-body { padding: 0 16px 12px; }
 
         /* ===== Link List (LIST view — default) ===== */
         .link-list {
@@ -331,7 +331,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 7px 10px;
+            padding: 4px 10px;
             border-radius: 6px;
             color: var(--text-muted);
             text-decoration: none;
@@ -382,17 +382,17 @@
         .widget[data-view="icons"] .link-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
-            gap: 6px;
+            gap: 5px;
         }
 
         .widget[data-view="icons"] .link-item {
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 8px;
-            padding: 14px 6px 12px;
+            gap: 6px;
+            padding: 8px 6px 7px;
             text-align: center;
-            min-height: 92px;
+            min-height: 72px;
             border-radius: 10px;
             border: 1px solid transparent;
             background: transparent;
@@ -451,7 +451,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 7px 10px;
+            padding: 5px 10px;
             border-radius: 6px;
             color: var(--text-muted);
             font-size: 0.8rem;
@@ -1840,7 +1840,7 @@ function applyTheme() {
 /* ============================================================
    9. MASONRY LAYOUT
    ============================================================ */
-const MASONRY_GAP = 20;
+const MASONRY_GAP = 14;
 const MASONRY_MIN_COL = 300;
 const MASONRY_MIN_COL_WIDE = 340;
 
