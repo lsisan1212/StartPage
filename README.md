@@ -11,7 +11,7 @@
 | 分類 | 內容 |
 |---|---|
 | 書籤 | 多頁面（page tabs）、小工具（widget）分組、list / icons 檢視、masonry 瀑布流、拖曳重排、跨頁拖移、widget 顏色／收埋 |
-| 小工具類型 | 連結清單、Crypto 報價（CoinGecko，紅漲綠跌）、天氣（Open-Meteo，免 key）、便簽、待辦、計時器／番茄鐘、最常用書籤（click 統計自動生成） |
+| 小工具類型 | 連結清單、Crypto 報價（CoinGecko，紅漲綠跌）、股票報價（騰訊 qt.gtimg，A股/港股/美股，紅漲綠跌）、天氣（Open-Meteo，免 key）、便簽、待辦、計時器／番茄鐘、最常用書籤（click 統計自動生成） |
 | 搜尋 | 搜尋列（Google/Bing/DDG/Brave/YouTube/GitHub + AI engines）+ Command palette（`Ctrl+Shift+K` 或頂欄 `⌘`） |
 | 外觀 | 6 主題、強調色、背景（純色／Bing 每日一圖／圖片 URL）、密度（compact/cozy/spacious）、三語 i18n（en/繁中/简中） |
 | 數據 | 匯出／匯入 JSON、複製／貼上、QR 碼傳送、5 位數字 code 傳送、匯入瀏覽器書籤（Netscape `bookmarks.html`） |

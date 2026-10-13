@@ -1512,6 +1512,15 @@ const I18N = {
         'qa.widget': 'Target widget',
         'qa.newWidget': '➕ New widget (from domain)',
         'qa.added': '✅ Link added',
+        'widgetType.stock': 'Stock quotes',
+        'stock.loading': 'Fetching quotes…',
+        'stock.error': '⚠️ Could not fetch quotes (qt.gtimg.cn unreachable?)',
+        'stock.stale': '⚠️ Showing stale data',
+        'stock.empty': 'No valid symbols — edit the widget',
+        'stock.editSymbols': 'Symbols',
+        'stock.symbolsLabel': 'Symbols (comma separated)',
+        'stock.symbolsHint': 'A-shares sh/sz + 6 digits · HK hk + 5 digits · US us + ticker (e.g. sh000001, hk00700, usAAPL)',
+        'stock.saved': '✅ Symbol list saved',
         'common.addWidget': '+ Add widget',
         'common.toastSaveFailed': '⚠️ Could not save — storage may be full or blocked.'
     },
@@ -1714,6 +1723,15 @@ const I18N = {
         'qa.widget': '目標小工具',
         'qa.newWidget': '➕ 新小工具（用網域名稱）',
         'qa.added': '✅ 已新增連結',
+        'widgetType.stock': '股票報價',
+        'stock.loading': '正在取得報價…',
+        'stock.error': '⚠️ 抓唔到報價（qt.gtimg.cn 連唔到？）',
+        'stock.stale': '⚠️ 顯示為舊資料',
+        'stock.empty': '冇有效代號 — 喺小工具選單編輯',
+        'stock.editSymbols': '代號',
+        'stock.symbolsLabel': '股票代號（逗號分隔）',
+        'stock.symbolsHint': 'A股 sh/sz+6位 · 港股 hk+5位 · 美股 us+大寫代號（例如 sh000001, hk00700, usAAPL）',
+        'stock.saved': '✅ 已儲存代號清單',
         'common.addWidget': '+ 新增小工具',
         'common.toastSaveFailed': '⚠️ 無法儲存 — 儲存空間可能已滿或被封鎖。'
     },
@@ -1916,6 +1934,15 @@ const I18N = {
         'qa.widget': '目标小组件',
         'qa.newWidget': '➕ 新小组件（用域名）',
         'qa.added': '✅ 已新增链接',
+        'widgetType.stock': '股票报价',
+        'stock.loading': '正在取得报价…',
+        'stock.error': '⚠️ 抓不到报价（qt.gtimg.cn 连不上？）',
+        'stock.stale': '⚠️ 显示为旧数据',
+        'stock.empty': '无有效代码 — 在组件菜单中编辑',
+        'stock.editSymbols': '代码',
+        'stock.symbolsLabel': '股票代码（逗号分隔）',
+        'stock.symbolsHint': 'A股 sh/sz+6位 · 港股 hk+5位 · 美股 us+大写代码（例如 sh000001, hk00700, usAAPL）',
+        'stock.saved': '✅ 已保存代码列表',
         'common.addWidget': '+ 新增小组件',
         'common.toastSaveFailed': '⚠️ 无法保存 — 存储空间可能已满或被阻止。'
     }
@@ -2124,6 +2151,13 @@ const DEFAULT_DATA = {
                     type: 'weather',
                     color: '#22d3ee',
                     city: 'Macau'
+                },
+                {
+                    id: 'w-stock',
+                    title: 'Stocks',
+                    type: 'stock',
+                    color: '#facc15',
+                    symbols: ['sh000001', 'sz399006', 'hk00700', 'sh600519', 'usAAPL']
                 }
             ]
         }
@@ -2199,6 +2233,19 @@ function normalizeData(d) {
             d.pages[0].widgets.push({
                 id: uid('w'), title: 'Weather', type: 'weather', color: '#22d3ee',
                 city: 'Macau'
+            });
+        }
+    }
+
+    /* ---- 一次性遷移（v3 升級）：補演示用股票小工具 ---- */
+    if (!d._v3 && d.pages && d.pages.length) {
+        const hasStock = d.pages.some(p => (p.widgets || []).some(w => w.type === 'stock'));
+        if (!hasStock && d.pages[0]) {
+            d._v3 = true;
+            d.pages[0].widgets = d.pages[0].widgets || [];
+            d.pages[0].widgets.push({
+                id: uid('w'), title: 'Stocks', type: 'stock', color: '#facc15',
+                symbols: ['sh000001', 'sz399006', 'hk00700', 'sh600519', 'usAAPL']
             });
         }
     }
@@ -2634,7 +2681,7 @@ function renderWidgets() {
             <span class="widget-title">${escapeHtml(widget.title)}</span>
             <div class="widget-actions">
                 ${wtype === 'links' ? `<button class="widget-action" data-action="view" title="${escapeHtml(viewIsIcons ? t('view.toList') : t('view.toIcons'))}">${viewIsIcons ? '▤' : '▦'}</button>` : ''}
-                ${(wtype === 'crypto' || wtype === 'weather') ? `<button class="widget-action" data-action="refresh" title="${escapeHtml(t('w.refresh'))}">🔄</button>` : ''}
+                ${(wtype === 'crypto' || wtype === 'stock' || wtype === 'weather') ? `<button class="widget-action" data-action="refresh" title="${escapeHtml(t('w.refresh'))}">🔄</button>` : ''}
                 <button class="widget-action" data-action="collapse" title="${escapeHtml(t(widget.collapsed ? 'w.expand' : 'w.collapse'))}">${widget.collapsed ? '▸' : '▾'}</button>
                 <button class="widget-action" data-action="color" title="${escapeHtml(t('widget.colourTitle'))}">🎨</button>
                 <button class="widget-action" data-action="rename" title="${escapeHtml(t('widget.rename'))}">✏️</button>
@@ -3996,6 +4043,7 @@ function clearWidgetIntervals() {
 function renderWidgetBody(widget, body) {
     switch (widget.type || 'links') {
         case 'crypto': renderCryptoBody(widget, body); break;
+        case 'stock': renderStockBody(widget, body); break;
         case 'weather': renderWeatherBody(widget, body); break;
         case 'notes': renderNotesBody(widget, body); break;
         case 'todo': renderTodoBody(widget, body); break;
@@ -4023,6 +4071,7 @@ function refreshWidgetBody(widgetId) {
 /** 強制刷新數據型 widget（清快取 + 重繪） */
 function refreshWidget(widgetId) {
     delete cryptoCache[widgetId];
+    delete stockCache[widgetId];
     delete weatherCache[widgetId];
     refreshWidgetBody(widgetId);
 }
@@ -4863,7 +4912,7 @@ function bindBookmarksImport() {
 /* ============================================================
    19l. 新增／編輯小工具 modal（標題 + 類型 + 類型參數）
    ============================================================ */
-const WIDGET_TYPE_ORDER = ['links', 'crypto', 'weather', 'notes', 'todo', 'timer', 'mostvisited'];
+const WIDGET_TYPE_ORDER = ['links', 'crypto', 'stock', 'weather', 'notes', 'todo', 'timer', 'mostvisited'];
 function showAddWidgetModal() {
     const overlay = document.getElementById('modalOverlay');
     const content = document.getElementById('modalContent');
@@ -4892,6 +4941,7 @@ function showAddWidgetModal() {
 
     const extraFor = (ty) => {
         if (ty === 'crypto') return { label: t('crypto.coinsLabel'), value: 'bitcoin, ethereum, solana', hint: t('crypto.coinsHint') };
+        if (ty === 'stock') return { label: t('stock.symbolsLabel'), value: 'sh000001, sz399006, hk00700, usAAPL', hint: t('stock.symbolsHint') };
         if (ty === 'weather') return { label: t('weather.cityLabel'), value: 'Macau', hint: t('weather.cityHint') };
         return null;
     };
@@ -4934,6 +4984,9 @@ function showAddWidgetModal() {
         } else if (type === 'crypto') {
             w.coins = extraInput.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
             if (!w.coins.length) w.coins = ['bitcoin', 'ethereum', 'solana'];
+        } else if (type === 'stock') {
+            w.symbols = extraInput.value.split(',').map(s => s.trim()).filter(Boolean);
+            if (!w.symbols.length) w.symbols = ['sh000001', 'sz399006', 'hk00700', 'usAAPL'];
         } else if (type === 'weather') {
             w.city = extraInput.value.trim() || 'Macau';
         } else if (type === 'todo') {
@@ -4969,6 +5022,13 @@ function editWidgetConfig(widgetId) {
                 <label>${escapeHtml(t('crypto.coinsLabel'))}</label>
                 <input type="text" id="ewExtra" value="${escapeHtml((widget.coins || []).join(', '))}">
                 <div class="settings-hint">${escapeHtml(t('crypto.coinsHint'))}</div>
+            </div>`;
+    } else if (type === 'stock') {
+        extraHtml = `
+            <div class="form-group">
+                <label>${escapeHtml(t('stock.symbolsLabel'))}</label>
+                <input type="text" id="ewExtra" value="${escapeHtml((widget.symbols || []).join(', '))}">
+                <div class="settings-hint">${escapeHtml(t('stock.symbolsHint'))}</div>
             </div>`;
     } else if (type === 'weather') {
         extraHtml = `
@@ -5014,6 +5074,9 @@ function editWidgetConfig(widgetId) {
         if (type === 'crypto') {
             const coins = document.getElementById('ewExtra').value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
             if (coins.length) { widget.coins = coins; delete cryptoCache[widgetId]; }
+        } else if (type === 'stock') {
+            const syms = document.getElementById('ewExtra').value.split(',').map(s => s.trim()).filter(Boolean);
+            if (syms.length) { widget.symbols = syms; delete stockCache[widgetId]; }
         } else if (type === 'weather') {
             const city = document.getElementById('ewExtra').value.trim();
             if (city) { widget.city = city; delete weatherCache[widgetId]; }
@@ -5030,6 +5093,109 @@ function editWidgetConfig(widgetId) {
     overlay.addEventListener('click', onOverlayClick);
     content.addEventListener('keydown', onKeydown);
     setTimeout(() => document.getElementById('ewTitle')?.focus(), 50);
+}
+
+/* ============================================================
+   19m. 股票報價 widget（騰訊 qt.gtimg.cn，JSONP，免 key）
+   支援 A股（sh/sz+6位）、港股（hk+5位）、美股（us+大寫代號）
+   ============================================================ */
+const stockCache = {};      /* widgetId → { ts, rows, failed, stale } */
+const STOCK_TIMEOUT = 6000;
+
+function stockCurrency(sym) {
+    const s = String(sym).toLowerCase();
+    if (s.indexOf('hk') === 0) return 'HK$';
+    if (s.indexOf('us') === 0) return '$';
+    return '¥';
+}
+function stockSymLabel(sym) {
+    const m = /^(sh|sz|hk|us)(.+)$/i.exec(sym);
+    return m ? m[1].toUpperCase() + ' ' + m[2] : sym;
+}
+/** JSONP 抓報價；resolve({ rows, failed }) */
+function fetchStocks(symbols) {
+    return new Promise((resolve) => {
+        /* 注意：qt.gtimg 對美股代號大小寫敏感（usNVDA ≠ usnvda），保留原樣 */
+        const syms = (symbols || []).map(s => String(s).trim()).filter(Boolean);
+        const uniq = [...new Set(syms)];
+        if (!uniq.length) { resolve({ rows: [], failed: false }); return; }
+
+        const rows = [];
+        let settled = false;
+        const script = document.createElement('script');
+        const finish = (failed) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            script.remove();
+            resolve({ rows, failed });
+        };
+        const timer = setTimeout(() => finish(true), STOCK_TIMEOUT);
+        script.onerror = () => finish(true);
+        script.onload = () => {
+            uniq.forEach(sym => {
+                const raw = window['v_' + sym] || window['v_' + sym.toLowerCase()];
+                if (!raw) return;
+                const f = String(raw).split('~');
+                if (f.length < 33) return;
+                const name = (f[1] || '').trim();
+                rows.push({
+                    sym,
+                    name: (name && !/^(美股|港股|A股|沪深|三板)$/.test(name)) ? name : stockSymLabel(sym),
+                    code: (f[2] || '').trim(),
+                    price: (f[3] || '').trim(),
+                    change: (f[31] || '').trim(),
+                    pct: (f[32] || '').trim()
+                });
+            });
+            finish(false);
+        };
+        script.src = 'https://qt.gtimg.cn/q=' + encodeURIComponent(uniq.join(','));
+        document.body.appendChild(script);
+    });
+}
+async function loadStocks(widget, force) {
+    const c = stockCache[widget.id];
+    if (!force && c && Date.now() - c.ts < 55000) return c;
+    let res;
+    try {
+        res = await fetchStocks(widget.symbols);
+    } catch (e) {
+        res = { rows: [], failed: true };
+    }
+    stockCache[widget.id] = {
+        ts: Date.now(),
+        rows: res.rows.length ? res.rows : (c ? c.rows : []),
+        failed: !!res.failed,
+        stale: !res.rows.length && !!c && !!c.rows.length
+    };
+    return stockCache[widget.id];
+}
+function renderStockBody(widget, body) {
+    const box = document.createElement('div');
+    box.className = 'dw';
+    box.innerHTML = `<div class="dw-loading">${escapeHtml(t('stock.loading'))}</div>`;
+    body.appendChild(box);
+
+    const paint = (st) => {
+        if (!st.rows.length) {
+            box.innerHTML = st.failed
+                ? `<div class="dw-error">${escapeHtml(t('stock.error'))}</div>`
+                : `<div class="dw-empty">${escapeHtml(t('stock.empty'))}</div>`;
+        } else {
+            box.innerHTML = st.rows.map(r => {
+                const up = !String(r.change).startsWith('-');
+                const chgTxt = `<span class="dw-chg ${up ? 'dw-up' : 'dw-down'}">${up ? '▲' : '▼'} ${escapeHtml(r.change || '0')} (${escapeHtml(r.pct || '0')}%)</span>`;
+                return `<div class="dw-row">
+                    <span class="dw-name"><span class="dw-sym">${escapeHtml(r.name)}</span><span class="dw-id">${escapeHtml(r.code || stockSymLabel(r.sym))}</span></span>
+                    <span class="dw-right"><span class="dw-price">${stockCurrency(r.sym)}${escapeHtml(r.price)}</span>${chgTxt}</span>
+                </div>`;
+            }).join('') + (st.stale ? `<div class="dw-error" style="padding:6px 0 0">${escapeHtml(t('stock.stale'))}</div>` : '');
+        }
+        scheduleLayout();
+    };
+    loadStocks(widget).then(paint);
+    widgetIntervals[widget.id] = setInterval(() => loadStocks(widget).then(paint), 60000);
 }
 
 /* ============================================================
