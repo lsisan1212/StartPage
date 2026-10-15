@@ -47,6 +47,13 @@
         }
 
         /* ===== Top Bar ===== */
+        /* ===== Sticky Header (topbar + page tabs) ===== */
+        .header-wrap {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
         .topbar {
             display: flex;
             align-items: center;
@@ -54,9 +61,6 @@
             padding: 16px 24px;
             gap: 16px;
             flex-wrap: wrap;
-            position: sticky;
-            top: 0;
-            z-index: 100;
             background: var(--topbar-bg, rgba(26, 26, 46, 0.9));
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
@@ -188,6 +192,7 @@
             flex-wrap: nowrap;
             border-bottom: 1px solid var(--border);
             background: var(--tabs-bg, rgba(26, 26, 46, 0.6));
+            backdrop-filter: blur(12px);
         }
 
         .page-tabs::-webkit-scrollbar { height: 4px; }
@@ -1013,7 +1018,7 @@
 
         /* ===== Print ===== */
         @media print {
-            .topbar, .page-tabs, .widget-actions, .add-widget-card, .add-link-btn, .settings-panel {
+            .header-wrap, .widget-actions, .add-widget-card, .add-link-btn, .settings-panel {
                 display: none !important;
             }
             body { background: #fff; color: #000; background-image: none; }
@@ -1036,7 +1041,8 @@
 </head>
 <body>
 
-<!-- ===== Top Bar ===== -->
+<!-- ===== Sticky Header: topbar + page tabs ===== -->
+<div class="header-wrap">
 <div class="topbar">
     <div class="topbar-left">
         <div class="logo">⬡ Startpage</div>
@@ -1071,6 +1077,10 @@
         <button class="btn btn-primary" id="addWidgetBtn" data-i18n="toolbar.addWidget">+ Widget</button>
     </div>
 </div>
+
+<!-- ===== Page Tabs ===== -->
+<div class="page-tabs" id="pageTabs"></div>
+</div><!-- /.header-wrap -->
 
 <!-- ===== Settings Panel ===== -->
 <div class="settings-panel" id="settingsPanel">
@@ -1140,9 +1150,6 @@
         <div class="settings-hint" data-i18n="settings.localHint">Data is stored in this browser only. Easiest way to move it to another device: “Send to phone” → type the 5-digit code on the phone. QR scan, Copy / Paste and Export / Import also work.</div>
     </div>
 </div>
-
-<!-- ===== Page Tabs ===== -->
-<div class="page-tabs" id="pageTabs"></div>
 
 <!-- ===== Main Content ===== -->
 <div class="content">
