@@ -1080,6 +1080,9 @@
                     <option value="https://kimi.moonshot.cn/?q=">Kimi</option>
                     <option value="https://grok.com/?q=">Grok</option>
                 </optgroup>
+                <optgroup label="Tools" data-i18n-label="search.groupTools">
+                    <option value="https://tubetranscript.com/?v=">YT Transcript</option>
+                </optgroup>
             </select>
         </div>
     </div>
@@ -1167,7 +1170,7 @@
 <!-- ===== Main Content ===== -->
 <div class="content">
     <div class="widgets-grid" id="widgetsGrid"></div>
-    <div class="version-footer">⬡ Startpage <a href="https://github.com/lsisan1212/StartPage" target="_blank" rel="noopener">v1.0</a> · Updated 2026-10-15</div>
+    <div class="version-footer">⬡ Startpage <a href="https://github.com/lsisan1212/StartPage" target="_blank" rel="noopener">v1.1</a> · Updated 2026-10-15</div>
 </div>
 
 <!-- ===== Modal ===== -->
@@ -1345,6 +1348,7 @@ const I18N = {
         'search.placeholder': 'Search the web or ask an AI…  (Ctrl+K)',
         'search.groupSearch': 'Search',
         'search.groupAI': 'AI',
+        'search.groupTools': 'Tools',
         'search.aiOpened': '🤖 Opened {name} · query copied to clipboard',
         'search.aiOpenedSimple': '🤖 Opened {name}',
         'toolbar.addWidget': '+ Widget',
@@ -1558,6 +1562,7 @@ const I18N = {
         'search.placeholder': '搜尋網頁或詢問 AI…  (Ctrl+K)',
         'search.groupSearch': '搜尋',
         'search.groupAI': 'AI',
+        'search.groupTools': '工具',
         'search.aiOpened': '🤖 已開啟 {name} · 搜尋詞已複製到剪貼簿',
         'search.aiOpenedSimple': '🤖 已開啟 {name}',
         'toolbar.addWidget': '+ 小工具',
@@ -1771,6 +1776,7 @@ const I18N = {
         'search.placeholder': '搜索网页或询问 AI…  (Ctrl+K)',
         'search.groupSearch': '搜索',
         'search.groupAI': 'AI',
+        'search.groupTools': '工具',
         'search.aiOpened': '🤖 已打开 {name} · 搜索词已复制到剪贴板',
         'search.aiOpenedSimple': '🤖 已打开 {name}',
         'toolbar.addWidget': '+ 小组件',
@@ -3296,6 +3302,23 @@ function showTextModal(title, initialValue, onSave, readOnly) {
 /* ============================================================
    18. SEARCH
    ============================================================ */
+const YT_TRANSCRIPT_ENGINE = 'https://tubetranscript.com/?v=';
+
+/* 從輸入抽出 YouTube video ID（支援 watch?v= / youtu.be / shorts / embed / 裸 ID） */
+function extractYouTubeId(q) {
+    const m = q.match(/(?:youtube\.com\/(?:watch\?[^\s]*?[?&]?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/i);
+    if (m) return m[1];
+    try {
+        const u = new URL(q);
+        if (/(^|\.)youtube\.com$|(^|\.)youtube-nocookie\.com$/.test(u.hostname)) {
+            const v = u.searchParams.get('v');
+            if (v && /^[\w-]{11}$/.test(v)) return v;
+        }
+    } catch (e) { /* 唔係 URL */ }
+    if (/^[\w-]{11}$/.test(q)) return q;
+    return null;
+}
+
 function isAiEngine(url) {
     return AI_ENGINE_PREFIXES.some(p => url.startsWith(p));
 }
@@ -3312,6 +3335,14 @@ function bindSearch() {
 
         const engine = sel.value;
         const engineName = sel.selectedOptions[0]?.textContent || 'AI';
+
+        /* YT Transcript：貼 YouTube URL／video ID → 開 transcript 頁；其他輸入 → 開主頁手動貼 */
+        if (engine === YT_TRANSCRIPT_ENGINE) {
+            const vid = extractYouTubeId(q);
+            window.open(vid ? YT_TRANSCRIPT_ENGINE + vid : 'https://tubetranscript.com/', '_blank', 'noopener');
+            input.value = '';
+            return;
+        }
 
         const isUrl = /^https?:\/\//i.test(q);
         const looksLikeDomain = !isUrl && /^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(q);
