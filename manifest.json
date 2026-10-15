@@ -2,6 +2,7 @@
   "name": "My Startpage",
   "short_name": "Startpage",
   "description": "Personal startpage — bookmarks, crypto prices, weather, notes, todo, timer",
+  "version": "1.0.0",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

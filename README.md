@@ -24,6 +24,11 @@
 - `Ctrl/Cmd+Shift+N` — 新增頁面
 - `Ctrl/Cmd+Shift+W` — 新增小工具
 
+## 版本
+
+- 頁底 footer 顯示版本號（link 去 repo）+ 更新日期；`manifest.json` 有 `version` 欄位。
+- 目前：v1.0（2026-10-15）
+
 ## 檔案
 
 - `index.html` — 全部（HTML + CSS + JS 單檔）
