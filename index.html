@@ -65,6 +65,11 @@
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
             transition: background-color 0.25s;
+            /* topbar 內有搜尋建議下拉（bm-suggest），必須壓過 page-tabs；
+               兩者都因 backdrop-filter 自成 stacking context，靠 DOM 次序會令
+               page-tabs 畫上層，故顯式設置 z-index 層級 */
+            position: relative;
+            z-index: 2;
         }
 
         .topbar-left {
@@ -213,6 +218,9 @@
             border-bottom: 1px solid var(--border);
             background: var(--tabs-bg, rgba(26, 26, 46, 0.6));
             backdrop-filter: blur(12px);
+            /* 見 .topbar 註解：顯式低於 topbar，讓搜尋建議下拉可以蓋過 page tabs */
+            position: relative;
+            z-index: 1;
         }
 
         .page-tabs::-webkit-scrollbar { height: 4px; }
@@ -1194,7 +1202,7 @@
 <!-- ===== Main Content ===== -->
 <div class="content">
     <div class="widgets-grid" id="widgetsGrid"></div>
-    <div class="version-footer">⬡ Startpage <a href="https://github.com/lsisan1212/StartPage" target="_blank" rel="noopener">v1.2</a> · Updated 2026-10-17</div>
+    <div class="version-footer">⬡ Startpage <a href="https://github.com/lsisan1212/StartPage" target="_blank" rel="noopener">v1.2.1</a> · Updated 2026-10-17</div>
 </div>
 
 <!-- ===== Modal ===== -->
