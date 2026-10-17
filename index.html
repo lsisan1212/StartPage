@@ -92,6 +92,7 @@
             padding: 0 12px;
             flex: 1;
             max-width: 560px;
+            position: relative;
             transition: border-color 0.2s;
         }
 
@@ -128,6 +129,25 @@
             color: var(--text);
             font-style: normal;
         }
+
+        /* ===== 書籤搜尋建議（top search bar omnibox） ===== */
+        .bm-suggest {
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 2500;
+            background: var(--modal-bg);
+            border: 1px solid var(--border); border-radius: 12px;
+            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+            overflow: hidden; display: none;
+        }
+        .bm-suggest.open { display: block; }
+        .bm-suggest-list { max-height: 340px; overflow-y: auto; }
+        .bm-suggest-group { padding: 7px 14px 3px; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+        .bm-suggest-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; cursor: pointer; font-size: 0.88rem; color: var(--text); }
+        .bm-suggest-item .bm-ico { width: 18px; text-align: center; flex-shrink: 0; }
+        .bm-suggest-item .bm-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bm-suggest-item .bm-sub { margin-left: auto; font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; padding-left: 10px; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+        .bm-suggest-item.active { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+        .bm-suggest-empty { padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+        .bm-suggest-hint { padding: 7px 14px; border-top: 1px solid var(--border); font-size: 0.7rem; color: var(--text-muted); display: flex; gap: 12px; flex-wrap: wrap; }
 
         .topbar-right {
             display: flex;
@@ -1084,6 +1104,10 @@
                     <option value="https://tubetranscript.com/?v=">YT Transcript</option>
                 </optgroup>
             </select>
+            <div class="bm-suggest" id="bmSuggest">
+                <div class="bm-suggest-list" id="bmSuggestList"></div>
+                <div class="bm-suggest-hint" id="bmSuggestHint"></div>
+            </div>
         </div>
     </div>
     <div class="topbar-right">
@@ -1170,7 +1194,7 @@
 <!-- ===== Main Content ===== -->
 <div class="content">
     <div class="widgets-grid" id="widgetsGrid"></div>
-    <div class="version-footer">⬡ Startpage <a href="https://github.com/lsisan1212/StartPage" target="_blank" rel="noopener">v1.1</a> · Updated 2026-10-15</div>
+    <div class="version-footer">⬡ Startpage <a href="https://github.com/lsisan1212/StartPage" target="_blank" rel="noopener">v1.2</a> · Updated 2026-10-17</div>
 </div>
 
 <!-- ===== Modal ===== -->
@@ -1345,12 +1369,15 @@ const THEMES = {
    ============================================================ */
 const I18N = {
     en: {
-        'search.placeholder': 'Search the web or ask an AI…  (Ctrl+K)',
+        'search.placeholder': 'Search web / AI… or type to find bookmarks  (Ctrl+K)',
         'search.groupSearch': 'Search',
         'search.groupAI': 'AI',
         'search.groupTools': 'Tools',
         'search.aiOpened': '🤖 Opened {name} · query copied to clipboard',
         'search.aiOpenedSimple': '🤖 Opened {name}',
+        'bmSuggest.group': 'Bookmarks',
+        'bmSuggest.empty': 'No matching bookmarks — press Enter to search the web',
+        'bmSuggest.hint': '↑↓ select · ↵ open bookmark · esc close',
         'toolbar.addWidget': '+ Widget',
         'view.list': 'List',
         'view.icons': 'Icons',
@@ -1559,12 +1586,15 @@ const I18N = {
         'common.toastSaveFailed': '⚠️ Could not save — storage may be full or blocked.'
     },
     'zh-TW': {
-        'search.placeholder': '搜尋網頁或詢問 AI…  (Ctrl+K)',
+        'search.placeholder': '搜尋網頁／AI… 或輸入關鍵字搵書籤  (Ctrl+K)',
         'search.groupSearch': '搜尋',
         'search.groupAI': 'AI',
         'search.groupTools': '工具',
         'search.aiOpened': '🤖 已開啟 {name} · 搜尋詞已複製到剪貼簿',
         'search.aiOpenedSimple': '🤖 已開啟 {name}',
+        'bmSuggest.group': '書籤',
+        'bmSuggest.empty': '搵唔到相關書籤 — 按 Enter 改為搜尋網頁',
+        'bmSuggest.hint': '↑↓ 選擇 · ↵ 開啓書籤 · esc 關閉',
         'toolbar.addWidget': '+ 小工具',
         'view.list': '清單',
         'view.icons': '圖示',
@@ -1773,12 +1803,15 @@ const I18N = {
         'common.toastSaveFailed': '⚠️ 無法儲存 — 儲存空間可能已滿或被封鎖。'
     },
     'zh-CN': {
-        'search.placeholder': '搜索网页或询问 AI…  (Ctrl+K)',
+        'search.placeholder': '搜索网页／AI… 或输入关键字找书签  (Ctrl+K)',
         'search.groupSearch': '搜索',
         'search.groupAI': 'AI',
         'search.groupTools': '工具',
         'search.aiOpened': '🤖 已打开 {name} · 搜索词已复制到剪贴板',
         'search.aiOpenedSimple': '🤖 已打开 {name}',
+        'bmSuggest.group': '书签',
+        'bmSuggest.empty': '找不到相关书签 — 按 Enter 改为搜索网页',
+        'bmSuggest.hint': '↑↓ 选择 · ↵ 打开书签 · esc 关闭',
         'toolbar.addWidget': '+ 小组件',
         'view.list': '列表',
         'view.icons': '图标',
@@ -3323,15 +3356,139 @@ function isAiEngine(url) {
     return AI_ENGINE_PREFIXES.some(p => url.startsWith(p));
 }
 
+/* ============================================================
+   18a. 書籤搜尋建議（top search bar → omnibox）
+   打字即列出全頁書籤匹配；↑↓ 選擇、↵ 開書籤，
+   冇匹配時 ↵ 維持原有 web／AI 搜尋行為。
+   ============================================================ */
+const bmSuggest = { items: [], active: -1 };
+
+function collectBmItems() {
+    const items = [];
+    data.pages.forEach((p) => (p.widgets || []).forEach((w) => {
+        if (w.type && w.type !== 'links' && w.type !== 'mostvisited') return;
+        (w.links || []).forEach(l => items.push({
+            url: l.url,
+            label: l.label || prettyUrlLabel(l.url),
+            loc: p.name + ' › ' + (w.name || '')
+        }));
+    }));
+    return items;
+}
+
+function bmSuggestFilter(q) {
+    const query = (q || '').trim().toLowerCase();
+    if (!query) return [];
+    return collectBmItems().map(it => {
+        const label = (it.label || '').toLowerCase();
+        const url = (it.url || '').toLowerCase();
+        let idx = label.indexOf(query);
+        let score;
+        if (idx >= 0) {
+            score = idx;
+        } else {
+            idx = url.indexOf(query);
+            if (idx < 0) return null;
+            score = 500 + idx;   /* URL 命中排最後 */
+        }
+        return { it, score };
+    }).filter(Boolean).sort((a, b) => a.score - b.score).map(x => x.it).slice(0, 8);
+}
+
+function bmSuggestClose() {
+    bmSuggest.items = [];
+    bmSuggest.active = -1;
+    document.getElementById('bmSuggest').classList.remove('open');
+}
+
+function bmSuggestRepaintActive() {
+    const list = document.getElementById('bmSuggestList');
+    list.querySelectorAll('.bm-suggest-item').forEach(el => {
+        el.classList.toggle('active', Number(el.dataset.i) === bmSuggest.active);
+    });
+    const act = list.querySelector('.bm-suggest-item.active');
+    if (act) act.scrollIntoView({ block: 'nearest' });
+}
+
+function bmSuggestPaint(q) {
+    bmSuggest.items = bmSuggestFilter(q);
+    bmSuggest.active = bmSuggest.items.length ? 0 : -1;
+    const list = document.getElementById('bmSuggestList');
+    const hint = document.getElementById('bmSuggestHint');
+    if (!bmSuggest.items.length) {
+        list.innerHTML = `<div class="bm-suggest-empty">${escapeHtml(t('bmSuggest.empty'))}</div>`;
+    } else {
+        let html = `<div class="bm-suggest-group">${escapeHtml(t('bmSuggest.group'))} · ${bmSuggest.items.length}</div>`;
+        bmSuggest.items.forEach((it, i) => {
+            html += `<div class="bm-suggest-item${i === bmSuggest.active ? ' active' : ''}" data-i="${i}">
+                <span class="bm-ico">🔗</span>
+                <span class="bm-txt">${escapeHtml(it.label)}</span>
+                <span class="bm-sub">${escapeHtml(it.loc)}</span>
+            </div>`;
+        });
+        list.innerHTML = html;
+        list.querySelectorAll('.bm-suggest-item').forEach(el => {
+            el.addEventListener('mousedown', (e) => {
+                e.preventDefault();   /* 搶在 input blur 之前 */
+                bmSuggestRun(Number(el.dataset.i));
+            });
+            el.addEventListener('mousemove', () => {
+                const i = Number(el.dataset.i);
+                if (i !== bmSuggest.active) { bmSuggest.active = i; bmSuggestRepaintActive(); }
+            });
+        });
+    }
+    hint.textContent = t('bmSuggest.hint');
+    document.getElementById('bmSuggest').classList.add('open');
+}
+
+function bmSuggestRun(i) {
+    const it = bmSuggest.items[i];
+    if (!it) return false;
+    bumpClick(it.url);
+    window.open(it.url, '_blank', 'noopener');
+    bmSuggestClose();
+    return true;
+}
+
 function bindSearch() {
     const input = document.getElementById('searchInput');
     const sel = document.getElementById('searchEngine');
 
+    input.addEventListener('input', () => {
+        const q = input.value.trim();
+        if (q) bmSuggestPaint(q); else bmSuggestClose();
+    });
+    input.addEventListener('blur', () => setTimeout(bmSuggestClose, 150));
     input.addEventListener('keydown', (e) => {
+        const open = document.getElementById('bmSuggest').classList.contains('open');
+        if (open && e.key === 'ArrowDown') {
+            e.preventDefault();
+            bmSuggest.active = Math.min(bmSuggest.active + 1, bmSuggest.items.length - 1);
+            bmSuggestRepaintActive();
+            return;
+        }
+        if (open && e.key === 'ArrowUp') {
+            e.preventDefault();
+            bmSuggest.active = Math.max(bmSuggest.active - 1, 0);
+            bmSuggestRepaintActive();
+            return;
+        }
+        if (open && e.key === 'Escape') {
+            e.preventDefault();
+            bmSuggestClose();
+            return;
+        }
         if (e.key !== 'Enter') return;
 
         const q = input.value.trim();
         if (!q) return;
+
+        /* 有書籤建議 → ↵ 開書籤；否則落原有 web／AI 搜尋 */
+        if (bmSuggest.active >= 0 && bmSuggestRun(bmSuggest.active)) {
+            input.value = '';
+            return;
+        }
 
         const engine = sel.value;
         const engineName = sel.selectedOptions[0]?.textContent || 'AI';

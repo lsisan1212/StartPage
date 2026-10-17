@@ -1,5 +1,5 @@
 /* StartPage service worker — 離線快取（數據本身喺 localStorage，唔經網絡） */
-const CACHE = 'startpage-v1';
+const CACHE = 'startpage-v2';
 const CORE = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', (e) => {
