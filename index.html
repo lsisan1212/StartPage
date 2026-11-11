@@ -1202,7 +1202,7 @@
 <!-- ===== Main Content ===== -->
 <div class="content">
     <div class="widgets-grid" id="widgetsGrid"></div>
-    <div class="version-footer">⬡ Startpage <a href="https://github.com/lsisan1212/StartPage" target="_blank" rel="noopener">v1.2.1</a> · Updated 2026-10-17</div>
+    <div class="version-footer">⬡ Startpage <a href="https://github.com/lsisan1212/StartPage" target="_blank" rel="noopener">v1.2.2</a> · Updated 2026-11-11</div>
 </div>
 
 <!-- ===== Modal ===== -->
@@ -1251,6 +1251,40 @@
    Masonry + per-widget colour + per-widget view (list/icons)
    + themes + i18n (en / zh-TW / zh-CN)
    ============================================================ */
+
+/* ============================================================
+   0. URL / BOOKMARKLET UTILS
+   ------------------------------------------------------------
+   書籤支援 javascript: bookmarklet：
+   - 儲存時保留原 scheme，唔好自動補 https://
+   - 執行時喺當前頁跑（target="_blank" 會變成 about:blank，JS 對空白頁執行）
+   ============================================================ */
+const KEEP_SCHEME_RE = /^(?:javascript|data|mailto|tel|file|ftp|chrome|about|view-source):/i;
+
+function isBookmarklet(url) {
+    return /^javascript\s*:/i.test(String(url || '').trim());
+}
+function normalizeLinkUrl(raw) {
+    const url = String(raw || '').trim();
+    if (!url) return '';
+    if (/^https?:\/\//i.test(url) || KEEP_SCHEME_RE.test(url) || isBookmarklet(url)) return url;
+    return 'https://' + url;   /* 只有無 scheme 嘅普通網址先補 */
+}
+function openLink(url) {
+    const u = String(url || '').trim();
+    if (!u) return;
+    if (isBookmarklet(u)) {
+        /* 模擬 <a href="javascript:…"> click：保留 user gesture，喺當前頁執行 */
+        const a = document.createElement('a');
+        a.href = u;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        return;
+    }
+    window.open(u, '_blank', 'noopener');
+}
 
 /* ============================================================
    1. THEMES
@@ -2292,6 +2326,14 @@ function normalizeData(d) {
         if (d.settings[k] === undefined) d.settings[k] = def[k];
     }
     if (!d.stats || typeof d.stats !== 'object') d.stats = {};
+    /* 修正舊版錯誤：javascript: bookmarklet 曾被自動補成 https://javascript:… */
+    (d.pages || []).forEach(p => (p.widgets || []).forEach(w => {
+        (w.links || []).forEach(l => {
+            if (l && /^https?:\/\/javascript\s*:/i.test(l.url)) {
+                l.url = l.url.replace(/^https?:\/\//i, '');
+            }
+        });
+    }));
     (d.pages || []).forEach(p => (p.widgets || []).forEach(w => {
         if (!w.type) w.type = 'links';
         if (!w.view) w.view = 'list';
@@ -3066,7 +3108,7 @@ function showLinkModal(existingLink, onSave) {
         </div>
         <div class="form-group">
             <label>${escapeHtml(t('link.url'))}</label>
-            <input type="text" id="modalLinkUrl" value="${existingLink ? escapeHtml(existingLink.url) : ''}" placeholder="https://...">
+            <input type="text" id="modalLinkUrl" value="${existingLink ? escapeHtml(existingLink.url) : ''}" placeholder="https://... / javascript:...">
         </div>
         <div class="modal-actions">
             <button class="btn" id="modalCancel">${escapeHtml(t('link.cancel'))}</button>
@@ -3097,7 +3139,7 @@ function showLinkModal(existingLink, onSave) {
         const label = document.getElementById('modalLinkLabel').value.trim();
         let url = document.getElementById('modalLinkUrl').value.trim();
         if (!label || !url) { toast(t('link.required')); return; }
-        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        url = normalizeLinkUrl(url);
         onSave(label, url);
         close();
     });
@@ -3454,7 +3496,7 @@ function bmSuggestRun(i) {
     const it = bmSuggest.items[i];
     if (!it) return false;
     bumpClick(it.url);
-    window.open(it.url, '_blank', 'noopener');
+    openLink(it.url);
     bmSuggestClose();
     return true;
 }
@@ -3492,6 +3534,13 @@ function bindSearch() {
         const q = input.value.trim();
         if (!q) return;
 
+        /* 貼 javascript: bookmarklet → 直接喺當前頁執行 */
+        if (isBookmarklet(q)) {
+            openLink(q);
+            input.value = '';
+            return;
+        }
+
         /* 有書籤建議 → ↵ 開書籤；否則落原有 web／AI 搜尋 */
         if (bmSuggest.active >= 0 && bmSuggestRun(bmSuggest.active)) {
             input.value = '';
@@ -3524,7 +3573,7 @@ function bindSearch() {
             usedAi = isAiEngine(engine);
         }
 
-        window.open(target, '_blank', 'noopener');
+        openLink(target);
 
         if (usedAi) {
             navigator.clipboard?.writeText(q).then(
@@ -4362,8 +4411,12 @@ function bumpClick(url) {
     data.stats[url] = (data.stats[url] || 0) + 1;
     clearTimeout(statsSaveTimer);
     statsSaveTimer = setTimeout(saveData, 1500);
-    const sel = `.link-item[data-url="${(window.CSS && CSS.escape) ? CSS.escape(url) : url.replace(/"/g, '\\"')}"] .link-count`;
-    document.querySelectorAll(sel).forEach(el => { el.textContent = '×' + data.stats[url]; });
+    /* bookmarklet 含 () / " / : 等字符，唔好用字串拼 CSS selector */
+    document.querySelectorAll('.link-item[data-url]').forEach(el => {
+        if (el.dataset.url !== url) return;
+        const c = el.querySelector('.link-count');
+        if (c) c.textContent = '×' + data.stats[url];
+    });
 }
 
 /* ---------- 連結清單型 widget（原有功能 + click 統計 + favicon fallback） ---------- */
@@ -4376,12 +4429,22 @@ function renderLinksBody(widget, body) {
         item.className = 'link-item';
         item.dataset.url = link.url;
         item.href = link.url;
-        item.target = '_blank';
-        item.rel = 'noopener noreferrer';
+        const jsLink = isBookmarklet(link.url);
+        if (jsLink) {
+            /* bookmarklet 要喺當前頁執行，唔可以開新分頁（會變成 about:blank） */
+            item.removeAttribute('target');
+            item.removeAttribute('rel');
+        } else {
+            item.target = '_blank';
+            item.rel = 'noopener noreferrer';
+        }
         const n = (data.stats || {})[link.url] || 0;
         item.title = link.label + '  ·  ' + link.url + (n ? `  ·  ${t('link.clicks', { n })}` : '');
+        const favHtml = jsLink
+            ? `<span class="fav-fallback" style="background:#c2410c">JS</span>`
+            : `<img class="link-favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(getDomain(link.url))}&sz=64" alt="">`;
         item.innerHTML = `
-            <img class="link-favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(getDomain(link.url))}&sz=64" alt="">
+            ${favHtml}
             <span class="link-label">${escapeHtml(link.label)}</span>
             ${n ? `<span class="link-count">×${n}</span>` : ''}
             <span class="link-edit-actions">
@@ -4929,7 +4992,7 @@ function cmdkRun(i) {
     closePalette();
     if (it.kind === 'link') {
         bumpClick(it.url);
-        window.open(it.url, '_blank', 'noopener');
+        openLink(it.url);
     } else {
         it.run();
     }
@@ -4972,11 +5035,15 @@ function pickUrlFromDrop(e) {
     if (internalDrag || !e.dataTransfer) return null;
     const uriList = (e.dataTransfer.getData('text/uri-list') || '').trim();
     const plain = (e.dataTransfer.getData('text/plain') || '').trim();
-    const url = (uriList || plain).split(/\s+/)[0];
-    if (!/^https?:\/\//i.test(url)) return null;
+    const dropped = uriList || plain;
+    /* bookmarklet 通常含空格，唔可以用 /\s+/ 斬第一舊；用第一行 */
+    const url = isBookmarklet(dropped)
+        ? dropped.split('\n')[0].trim()
+        : dropped.split(/\s+/)[0];
+    if (!/^https?:\/\//i.test(url) && !isBookmarklet(url)) return null;
     let label = '';
     const firstLine = plain.split('\n')[0].trim();
-    if (firstLine && !/^https?:\/\//i.test(firstLine)) label = firstLine;
+    if (firstLine && !/^https?:\/\//i.test(firstLine) && !isBookmarklet(firstLine)) label = firstLine;
     if (!label) label = prettyUrlLabel(url);
     return { url, label };
 }
@@ -5007,7 +5074,7 @@ function quickAddModal(url, label) {
         </div>
         <div class="form-group">
             <label>${escapeHtml(t('link.url'))}</label>
-            <input type="text" id="qaUrl" value="${escapeHtml(url)}">
+            <input type="text" id="qaUrl" value="${escapeHtml(url)}" placeholder="https://... / javascript:...">
         </div>
         <div class="form-group">
             <label>${escapeHtml(t('qa.widget'))}</label>
@@ -5036,7 +5103,7 @@ function quickAddModal(url, label) {
         const l = document.getElementById('qaLabel').value.trim();
         let u = document.getElementById('qaUrl').value.trim();
         if (!l || !u) { toast(t('link.required')); return; }
-        if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+        u = normalizeLinkUrl(u);
         const wsel = document.getElementById('qaWidget').value;
         if (wsel === '__new__') {
             const nw = {
@@ -5107,7 +5174,7 @@ function parseBookmarksHtml(text) {
         } else {
             const url = el.getAttribute('href');
             const label = (el.textContent || '').trim();
-            if (url && /^https?:\/\//i.test(url)) items.push({ folder, label, url });
+            if (url && (/^https?:\/\//i.test(url) || isBookmarklet(url))) items.push({ folder, label, url });
         }
     });
     return items;

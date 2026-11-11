@@ -16,6 +16,7 @@
 | 外觀 | 6 主題、強調色、背景（純色／Bing 每日一圖／圖片 URL）、密度（compact/cozy/spacious）、三語 i18n（en/繁中/简中） |
 | 數據 | 匯出／匯入 JSON、複製／貼上、QR 碼傳送、5 位數字 code 傳送、匯入瀏覽器書籤（Netscape `bookmarks.html`） |
 | 快速新增 | 拖 URL 落頁面 → 彈窗揀 widget 加入；`+ Widget` 選類型新增 |
+| Bookmarklet | 書籤 URL 可填 `javascript:…`（唔會被補 `https://`，顯示 JS 圖示）；由書籤卡／搜尋建議／Command palette／搜尋列都可執行，喺當前分頁跑；匯入 Netscape `bookmarks.html` 亦保留。⚠️ 只加到自己信任嘅 bookmarklet，佢有目前頁面嘅完整 JS 權限 |
 
 ## 快捷鍵
 
@@ -27,7 +28,7 @@
 ## 版本
 
 - 頁底 footer 顯示版本號（link 去 repo）+ 更新日期；`manifest.json` 有 `version` 欄位。
-- 目前：v1.1（2026-10-15）
+- 目前：v1.2.2（2026-11-11）
 
 ## 檔案
 
